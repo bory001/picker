@@ -656,8 +656,8 @@
   .sched-emoji-picker {
     position: absolute; bottom: calc(100% + 6px); left: 0;
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 8px; display: flex; gap: 6px; flex-wrap: wrap;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 800; width: 200px;
+    border-radius: 10px; padding: 8px; display: flex; gap: 4px; flex-wrap: wrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 800; width: 240px;
   }
   /* ── 일정 정보 배지 (달력 셀 아래, 참석현황) ── */
   .sched-info-bar {
@@ -901,14 +901,31 @@
       <div class="sched-emoji-wrap">
         <button class="memo-pencil-btn" onclick="toggleScheduleEmojiPicker()" title="이모지 선택" style="font-size:18px;padding:4px 6px;">✏️</button>
         <div class="sched-emoji-picker" id="scheduleEmojiPicker" style="display:none;">
-          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍽️')">🍽️</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍜')">🍜</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍱')">🍱</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍚')">🍚</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍖')">🍖</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍗')">🍗</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🥩')">🥩</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍣')">🍣</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍛')">🍛</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍕')">🍕</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🌮')">🌮</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍔')">🍔</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍝')">🍝</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🥗')">🥗</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🥘')">🥘</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍲')">🍲</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍺')">🍺</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍻')">🍻</button>
           <button class="memo-emoji-btn" onclick="selectSchedEmoji('🎂')">🎂</button>
           <button class="memo-emoji-btn" onclick="selectSchedEmoji('🎉')">🎉</button>
-          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍜')">🍜</button>
-          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🍺')">🍺</button>
-          <button class="memo-emoji-btn" onclick="selectSchedEmoji('📢')">📢</button>
-          <button class="memo-emoji-btn" onclick="selectSchedEmoji('❌')">❌</button>
           <button class="memo-emoji-btn" onclick="selectSchedEmoji('🏆')">🏆</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🚌')">🚌</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('🌸')">🌸</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('📢')">📢</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('❤️')">❤️</button>
+          <button class="memo-emoji-btn" onclick="selectSchedEmoji('❌')">❌</button>
         </div>
       </div>
       <span id="schedEmojiPreview" style="font-size:18px;flex-shrink:0;min-width:22px;"></span>
@@ -920,12 +937,20 @@
         <input type="text" class="modal-input" id="schedTime" placeholder="예) 12:00" maxlength="8" style="margin-bottom:0;">
       </div>
       <div>
-        <label class="modal-label">장소</label>
-        <input type="text" class="modal-input" id="schedPlace" placeholder="예) 1층 식당" maxlength="15" style="margin-bottom:0;">
+        <label class="modal-label">식당명</label>
+        <input type="text" class="modal-input" id="schedPlace" placeholder="예) 한우마루" maxlength="15" style="margin-bottom:0;">
       </div>
     </div>
-    <label class="modal-label">금액 (1인)</label>
-    <input type="text" class="modal-input" id="schedAmount" placeholder="예) 8,000원" maxlength="12">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0.75rem;">
+      <div>
+        <label class="modal-label">집결장소</label>
+        <input type="text" class="modal-input" id="schedGather" placeholder="예) 1층 로비" maxlength="15" style="margin-bottom:0;">
+      </div>
+      <div>
+        <label class="modal-label">총금액</label>
+        <input type="text" class="modal-input" id="schedAmount" placeholder="예) 120,000원" maxlength="12" style="margin-bottom:0;">
+      </div>
+    </div>
     <div class="modal-error" id="scheduleModalErr"></div>
     <div style="display:flex;gap:8px;margin-top:0.25rem;">
       <button class="modal-cancel" onclick="closeScheduleModal()" style="flex:1;">취소</button>
@@ -1281,7 +1306,7 @@
         if (sched && (sched.title || sched.emoji)) {
           const dot = document.createElement('span');
           dot.className = 'day-memo-dot';
-          dot.textContent = sched.emoji || '🍽️';
+          dot.textContent = sched.emoji || '🍜';
           bottom.appendChild(dot);
         }
         if (attendanceData[key]) {
@@ -1320,7 +1345,7 @@
     const mBar = document.getElementById('mdpSchedBar');
     // PC
     const pBar = document.getElementById('pcSchedBar');
-    if (!sched || (!sched.title && !sched.emoji && !sched.time && !sched.place && !sched.amount)) {
+    if (!sched || (!sched.title && !sched.emoji && !sched.time && !sched.place && !sched.gather && !sched.amount)) {
       if (mBar) mBar.style.display = 'none';
       if (pBar) pBar.style.display = 'none';
       return;
@@ -1332,9 +1357,10 @@
 
   function buildSchedBarHtml(sched) {
     let chips = '';
-    if (sched.emoji || sched.title) chips += `<span class="sched-info-chip">${sched.emoji||'🍽️'} ${sched.title||''}</span>`;
+    if (sched.emoji || sched.title) chips += `<span class="sched-info-chip">${sched.emoji||'🍜'} ${sched.title||''}</span>`;
     if (sched.time)   chips += `<span class="sched-info-chip">⏰ ${sched.time}</span>`;
-    if (sched.place)  chips += `<span class="sched-info-chip">📍 ${sched.place}</span>`;
+    if (sched.place)  chips += `<span class="sched-info-chip">🍴 ${sched.place}</span>`;
+    if (sched.gather) chips += `<span class="sched-info-chip">📍 ${sched.gather}</span>`;
     if (sched.amount) chips += `<span class="sched-info-chip">💰 ${sched.amount}</span>`;
     return `<div class="sched-info-bar">${chips}</div>`;
   }
@@ -1543,7 +1569,7 @@
         name, registeredAt: Date.now()
       });
       const [,m,d] = dateKey.split('-');
-      showToast(`"${name}" 님이 ${parseInt(m)}.${parseInt(d)}. 참석 등록! 🍽️`, 'success');
+      showToast(`"${name}" 님이 ${parseInt(m)}.${parseInt(d)}. 참석 등록! 🍜`, 'success');
     } catch(e) { showToast('저장 실패: '+e.message,'error'); }
     finally { setLoading(false); }
   }
@@ -1671,13 +1697,27 @@
   // ── 일정 정보 모달 ──
   window.openScheduleModal = function() {
     if (!selectedDate) return;
-    const sched = scheduleData[selectedDate] || {};
+    const sched = scheduleData[selectedDate];
+
+    // 일정명이 없는 날짜: 최근 일정 불러오기
+    let fillSched = sched;
+    if (!sched || (!sched.title && !sched.time && !sched.place && !sched.gather && !sched.amount)) {
+      // scheduleData에서 selectedDate 이전 가장 최근 날짜 찾기
+      const pastDates = Object.keys(scheduleData)
+        .filter(k => k < selectedDate && scheduleData[k] && (scheduleData[k].title || scheduleData[k].time))
+        .sort();
+      if (pastDates.length > 0) {
+        fillSched = scheduleData[pastDates[pastDates.length - 1]];
+      }
+    }
+
     document.getElementById('scheduleModalDateLabel').textContent = formatDateKr(selectedDate) + ' 일정 정보';
-    document.getElementById('schedTitle').value = sched.title || '';
-    document.getElementById('schedTime').value = sched.time || '';
-    document.getElementById('schedPlace').value = sched.place || '';
-    document.getElementById('schedAmount').value = sched.amount || '';
-    _schedEmoji = sched.emoji || '';
+    document.getElementById('schedTitle').value  = (sched && sched.title)  || (fillSched && fillSched.title)  || '';
+    document.getElementById('schedTime').value   = (sched && sched.time)   || (fillSched && fillSched.time)   || '';
+    document.getElementById('schedPlace').value  = (sched && sched.place)  || (fillSched && fillSched.place)  || '';
+    document.getElementById('schedGather').value = (sched && sched.gather) || (fillSched && fillSched.gather) || '';
+    document.getElementById('schedAmount').value = (sched && sched.amount) || '';
+    _schedEmoji = (sched && sched.emoji) || (fillSched && !sched ? (fillSched.emoji || '🍜') : '🍜');
     document.getElementById('schedEmojiPreview').textContent = _schedEmoji;
     document.getElementById('scheduleModalErr').textContent = '';
     document.querySelectorAll('#scheduleEmojiPicker .memo-emoji-btn').forEach(b => {
@@ -1693,21 +1733,23 @@
 
   window.saveScheduleInfo = async function() {
     if (!selectedDate) return;
-    const title = document.getElementById('schedTitle').value.trim();
-    const time = document.getElementById('schedTime').value.trim();
-    const place = document.getElementById('schedPlace').value.trim();
+    const title  = document.getElementById('schedTitle').value.trim();
+    const time   = document.getElementById('schedTime').value.trim();
+    const place  = document.getElementById('schedPlace').value.trim();
+    const gather = document.getElementById('schedGather').value.trim();
     const amount = document.getElementById('schedAmount').value.trim();
-    if (!title && !time && !place && !amount && !_schedEmoji) {
+    if (!title && !time && !place && !gather && !amount && !_schedEmoji) {
       document.getElementById('scheduleModalErr').textContent = '내용을 하나 이상 입력해주세요';
       return;
     }
     try {
       const obj = {};
-      if (_schedEmoji) obj.emoji = _schedEmoji;
-      if (title) obj.title = title;
-      if (time) obj.time = time;
-      if (place) obj.place = place;
-      if (amount) obj.amount = amount;
+      if (_schedEmoji) obj.emoji  = _schedEmoji;
+      if (title)       obj.title  = title;
+      if (time)        obj.time   = time;
+      if (place)       obj.place  = place;
+      if (gather)      obj.gather = gather;
+      if (amount)      obj.amount = amount;
       await set(ref(db, `jst_schedule/${selectedDate}`), obj);
       closeScheduleModal();
       showToast('일정 정보 저장 완료 ✓', 'success');
