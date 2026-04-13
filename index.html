@@ -841,8 +841,8 @@
               <div class="mdp-att-count" id="mdpAttCount" style="display:none;"></div>
               <!-- 관리자 버튼 (날짜 우측 인라인) -->
               <div id="mdpAdminRow" style="display:none;margin-left:auto;gap:4px;flex-shrink:0;">
-                <button class="mdp-admin-btn blue" onclick="openScheduleModal()">📋 일정</button>
-                <button class="mdp-admin-btn green" id="mdpManualToggle" onclick="toggleManualForm()">👤 추가</button>
+                <button class="mdp-admin-btn blue" onclick="openScheduleModal()">📋 일정 추가</button>
+                <button class="mdp-admin-btn green" id="mdpManualToggle" onclick="toggleManualForm()">👤 참석자 추가</button>
               </div>
             </div>
             <!-- 일정 정보 표시 -->
@@ -884,8 +884,8 @@
         </div>
         <!-- 관리자 버튼 (PC 사이드바) -->
         <div id="pcAdminRow" style="display:none;padding:0.5rem 1.25rem 1rem;display:none;gap:6px;flex-wrap:wrap;">
-          <button class="mdp-admin-btn blue" onclick="openScheduleModal()">📋 일정 설정</button>
-          <button class="mdp-admin-btn green" onclick="togglePcManualForm()">👤 참석 추가</button>
+          <button class="mdp-admin-btn blue" onclick="openScheduleModal()">📋 일정 추가</button>
+          <button class="mdp-admin-btn green" onclick="togglePcManualForm()">👤 참석자 추가</button>
         </div>
         <div id="pcManualForm" style="display:none;padding:0 1.25rem 1rem;">
           <div style="display:flex;gap:6px;">
@@ -1667,7 +1667,7 @@
     const form = document.getElementById('mdpManualForm');
     if (form) form.style.display = _manualOpen ? 'flex' : 'none';
     const btn = document.getElementById('mdpManualToggle');
-    if (btn) btn.textContent = _manualOpen ? '✖ 닫기' : '👤 참석 추가';
+    if (btn) btn.textContent = _manualOpen ? '✖ 닫기' : '👤 참석자 추가';
   };
 
   window.togglePcManualForm = function() {
