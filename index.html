@@ -651,7 +651,43 @@
   .mdb-search:focus { border-color: var(--primary); }
   #mdbFileInput { display: none; }
 
-  /* ── 일정 정보 모달 이모지피커 배치 ── */
+  /* ── 연락처 액션 팝업 ── */
+  .contact-popup-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 800; padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .contact-popup-overlay.show { display: flex; }
+  .contact-popup {
+    background: white; border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 480px; padding: 1.25rem 1rem 1.5rem;
+    animation: slideUpSheet 0.22s ease;
+  }
+  @keyframes slideUpSheet { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .contact-popup-name {
+    font-size: 15px; font-weight: 800; color: var(--primary);
+    text-align: center; margin-bottom: 1rem;
+  }
+  .contact-popup-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .contact-action-btn {
+    padding: 14px 10px; border-radius: 14px; border: none;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; gap: 6px; transition: all 0.15s;
+  }
+  .contact-action-btn .ca-icon { font-size: 26px; line-height: 1; }
+  .contact-action-btn.call  { background: #e8f5e9; color: #1b5e20; }
+  .contact-action-btn.call:active  { background: #c8e6c9; }
+  .contact-action-btn.sms   { background: #e3f2fd; color: #0d47a1; }
+  .contact-action-btn.sms:active   { background: #bbdefb; }
+  .contact-popup-cancel {
+    margin-top: 10px; width: 100%; padding: 13px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; font-size: 14px; font-weight: 600;
+    font-family: inherit; cursor: pointer; color: var(--text-muted);
+  }
+
+
   .sched-emoji-wrap { position: relative; flex-shrink: 0; }
   .sched-emoji-picker {
     position: absolute; bottom: calc(100% + 6px); left: 0;
@@ -809,7 +845,7 @@
         <div class="mdp-att-grid" id="mdpAttGrid">
           <div class="mdp-empty">날짜를 선택해 주세요</div>
         </div>
-        <div class="long-press-hint" id="mdpChipHint" style="display:none;">이름 클릭 → 문자 보내기 | 길게 누르면 등록시각 조회</div>
+        <div class="long-press-hint" id="mdpChipHint" style="display:none;">이름 클릭 → 전화/문자 선택 | 길게 누르면 등록시각 조회</div>
         <button class="mdp-attend-btn register" id="mdpAttendBtn" onclick="toggleAttendanceMobile()" style="display:none;">✅ 참석 등록</button>
         <!-- 관리자 버튼 행 -->
         <div class="mdp-admin-row" id="mdpAdminRow" style="display:none;">
@@ -948,7 +984,8 @@
       </div>
       <div>
         <label class="modal-label">총금액</label>
-        <input type="text" class="modal-input" id="schedAmount" placeholder="예) 120,000원" maxlength="12" style="margin-bottom:0;">
+        <input type="text" class="modal-input" id="schedAmount" placeholder="예) 120,000" maxlength="12" style="margin-bottom:0;"
+          oninput="this.value=this.value.replace(/[^0-9,]/g,'').replace(/,/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,',')">
       </div>
     </div>
     <div class="modal-error" id="scheduleModalErr"></div>
@@ -1072,6 +1109,22 @@
       <button class="time-modal-cancel" onclick="closeTimeModal()">취소</button>
       <button class="time-modal-confirm" onclick="confirmTimeInput()">저장</button>
     </div>
+  </div>
+</div>
+
+<!-- 연락처 액션 팝업 -->
+<div class="contact-popup-overlay" id="contactPopup" onclick="closeContactPopup(event)">
+  <div class="contact-popup">
+    <div class="contact-popup-name" id="contactPopupName"></div>
+    <div class="contact-popup-btns">
+      <button class="contact-action-btn call" onclick="doContactAction('call')">
+        <span class="ca-icon">📞</span>전화하기
+      </button>
+      <button class="contact-action-btn sms" onclick="doContactAction('sms')">
+        <span class="ca-icon">💬</span>문자보내기
+      </button>
+    </div>
+    <button class="contact-popup-cancel" onclick="closeContactPopup()">취소</button>
   </div>
 </div>
 
@@ -1412,7 +1465,7 @@
         <button class="att-page-btn" ${attPage>=totalPages-1?'disabled':''} onclick="changeAttPage(1)">▶</button>
       </div>`;
     }
-    html += `<div class="long-press-hint">이름 클릭 → 문자 보내기</div>`;
+    html += `<div class="long-press-hint">이름 클릭 → 전화/문자 선택</div>`;
     attList.innerHTML = html;
 
     attList.querySelectorAll('.att-name-chip, .att-name-chip-wrap').forEach(el => {
@@ -1514,6 +1567,9 @@
   }
 
   // ── 칩 탭 핸들러 ──
+  // ── 연락처 팝업 상태 ──
+  let _contactPhone = '';
+
   function handleChipTap(name, chipEl) {
     if (isAdminMode) {
       document.querySelectorAll('.att-name-chip').forEach(c => c.style.outline = '');
@@ -1530,11 +1586,30 @@
     }
     const phone = memberData[name];
     if (phone) {
-      window.location.href = `sms:${phone.replace(/[^0-9]/g,'')}`;
+      _contactPhone = phone.replace(/[^0-9]/g, '');
+      document.getElementById('contactPopupName').textContent = `📋 ${name}`;
+      document.getElementById('contactPopup').classList.add('show');
     } else {
       showToast(`"${name}" 님의 연락처가 없어요`, '');
     }
   }
+
+  window.closeContactPopup = function(e) {
+    if (e && e.target !== document.getElementById('contactPopup')) return;
+    document.getElementById('contactPopup').classList.remove('show');
+    _contactPhone = '';
+  };
+
+  window.doContactAction = function(type) {
+    document.getElementById('contactPopup').classList.remove('show');
+    if (!_contactPhone) return;
+    if (type === 'call') {
+      window.location.href = `tel:${_contactPhone}`;
+    } else {
+      window.location.href = `sms:${_contactPhone}`;
+    }
+    _contactPhone = '';
+  };
 
   // ── 참석 등록/취소 ──
   window.toggleAttendance = async function() {
