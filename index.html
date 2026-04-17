@@ -1426,13 +1426,21 @@
     if (!selectedDate) return;
     const btn = document.getElementById('attendBtn');
     const attList = document.getElementById('attList');
-    btn.disabled = false;
     const dayData = attendanceData[selectedDate] || {};
     const names = Object.keys(dayData);
     const isRegistered = names.includes(currentUser);
+    const editable = canEditAttendance(selectedDate);
 
-    btn.className = isRegistered ? 'my-attend-btn cancel' : 'my-attend-btn register';
-    btn.innerHTML = isRegistered ? '❌ 참석 취소' : '✅ 참석 등록';
+    btn.disabled = !editable;
+    if (!editable) {
+      btn.className = 'my-attend-btn register';
+      btn.innerHTML = '🔒 지난 날짜 (관리자만 수정)';
+      btn.style.opacity = '0.45'; btn.style.cursor = 'default';
+    } else {
+      btn.style.opacity = ''; btn.style.cursor = '';
+      btn.className = isRegistered ? 'my-attend-btn cancel' : 'my-attend-btn register';
+      btn.innerHTML = isRegistered ? '❌ 참석 취소' : '✅ 참석 등록';
+    }
     updateTimeToggleBtns(isRegistered);
 
     // 관리자 PC 행
@@ -1500,8 +1508,16 @@
     // 헤더 참석 버튼
     if (hdrBtn) {
       hdrBtn.style.display = 'inline-block';
-      hdrBtn.className = isRegistered ? 'hdr-btn hdr-attend-btn cancel' : 'hdr-btn hdr-attend-btn register';
-      hdrBtn.innerHTML = isRegistered ? '❌ 참석 취소' : '✅ 참석 등록';
+      const editable = canEditAttendance(selectedDate);
+      if (!editable) {
+        hdrBtn.className = 'hdr-btn hdr-attend-btn';
+        hdrBtn.innerHTML = '🔒 지난 날짜';
+        hdrBtn.style.opacity = '0.45'; hdrBtn.style.cursor = 'default';
+      } else {
+        hdrBtn.style.opacity = ''; hdrBtn.style.cursor = '';
+        hdrBtn.className = isRegistered ? 'hdr-btn hdr-attend-btn cancel' : 'hdr-btn hdr-attend-btn register';
+        hdrBtn.innerHTML = isRegistered ? '❌ 참석 취소' : '✅ 참석 등록';
+      }
     }
     updateTimeToggleBtns(isRegistered);
 
@@ -1615,8 +1631,23 @@
   };
 
   // ── 참석 등록/취소 ──
+  // ── 오늘 날짜 키 ──
+  function getTodayKey() {
+    const t = new Date();
+    return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  }
+
+  // 일반 사용자: 당일만 참석 가능 여부
+  function canEditAttendance(dateKey) {
+    if (isAdminMode) return true;
+    return dateKey === getTodayKey();
+  }
+
   window.toggleAttendance = async function() {
     if (!selectedDate) return;
+    if (!canEditAttendance(selectedDate)) {
+      showToast('지난 날짜는 관리자만 수정할 수 있어요', 'error'); return;
+    }
     const names = Object.keys(attendanceData[selectedDate]||{});
     if (names.includes(currentUser)) {
       await removeAttendance(selectedDate, currentUser);
@@ -1631,6 +1662,9 @@
       await removeAttendance(selectedDate, _adminSelectedName);
       _adminSelectedName = null;
       return;
+    }
+    if (!canEditAttendance(selectedDate)) {
+      showToast('지난 날짜는 관리자만 수정할 수 있어요', 'error'); return;
     }
     const names = Object.keys(attendanceData[selectedDate]||{});
     if (names.includes(currentUser)) {
@@ -1733,6 +1767,9 @@
 
   window.openTimeModal = function() {
     if (!selectedDate) return;
+    if (!canEditAttendance(selectedDate)) {
+      showToast('지난 날짜는 관리자만 수정할 수 있어요', 'error'); return;
+    }
     const hasTime = attendanceData[selectedDate]?.[currentUser]?.arrivalTime;
     _timeModalMode = hasTime ? 'mod' : 'reg';
     document.getElementById('timeModalTitle').textContent = hasTime ? '✏️ 참석 시각 수정' : '⏰ 참석 시각 등록';
