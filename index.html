@@ -1637,10 +1637,10 @@
     return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
   }
 
-  // 일반 사용자: 당일만 참석 가능 여부
+  // 일반 사용자: 당일 이상(당일+미래)만 참석 가능, 과거는 관리자만
   function canEditAttendance(dateKey) {
     if (isAdminMode) return true;
-    return dateKey === getTodayKey();
+    return dateKey >= getTodayKey();
   }
 
   window.toggleAttendance = async function() {
