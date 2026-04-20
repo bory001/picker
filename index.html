@@ -2654,23 +2654,17 @@
       card.className = 'rest-card';
       card.style.cssText = 'border-radius:0;border:none;';
 
-      // ── 좌측: 대표사진 (클릭→사진등록) + 전화버튼 수직 배치 ──
-      const leftCol = document.createElement('div');
-      leftCol.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;';
-
-      // 대표사진 슬롯
+      // ── 좌측: 대표사진 (클릭→뷰어) ──
       const imgSlot = document.createElement('div');
-      imgSlot.style.cssText = 'cursor:pointer;position:relative;';
-      imgSlot.title = '클릭하여 사진 등록';
-      imgSlot.onclick = () => { _restImgTarget = { type, id }; document.getElementById('restImgFileInput').click(); };
+      imgSlot.style.cssText = 'flex-shrink:0;cursor:pointer;position:relative;';
 
       if (imgs.length > 0) {
         const img = document.createElement('img');
         img.className = 'rest-card-img';
         img.src = imgs[0];
         img.style.display = 'block';
-        setupLongPress(img, () => openImgViewer(imgs[0]));
-        img.addEventListener('click', (e) => { e.stopPropagation(); _restImgTarget = { type, id }; document.getElementById('restImgFileInput').click(); });
+        img.title = '클릭하여 크게 보기';
+        img.onclick = (e) => { e.stopPropagation(); openImgViewer(imgs[0]); };
         imgSlot.appendChild(img);
         if (imgs.length > 1) {
           const badge = document.createElement('div');
@@ -2681,27 +2675,10 @@
       } else {
         const ph = document.createElement('div');
         ph.className = 'rest-card-ph';
-        ph.style.cursor = 'pointer';
-        ph.title = '클릭하여 사진 등록';
         ph.textContent = '🍴';
         imgSlot.appendChild(ph);
       }
-      leftCol.appendChild(imgSlot);
-
-      // 전화 버튼 (이미지 바로 아래, + 버튼 크기)
-      const callBtn = document.createElement('button');
-      callBtn.className = 'rest-img-add';
-      callBtn.style.cssText = 'border:none;background:#e3f2fd;color:#1565c0;font-size:14px;width:46px;height:22px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
-      callBtn.textContent = '📞';
-      callBtn.title = rest.phone || '연락처 없음';
-      if (rest.phone) {
-        callBtn.onclick = (e) => { e.stopPropagation(); window.location.href = `tel:${rest.phone.replace(/[^0-9]/g,'')}`; };
-      } else {
-        callBtn.style.opacity = '0.3'; callBtn.style.cursor = 'default';
-      }
-      leftCol.appendChild(callBtn);
-
-      card.appendChild(leftCol);
+      card.appendChild(imgSlot);
 
       // ── 중앙: 식당 정보 ──
       const info = document.createElement('div');
@@ -2711,16 +2688,37 @@
         ${rest.phone ? `<div class="rest-card-sub" style="color:#1565c0;">📞 ${rest.phone}</div>` : ''}`;
       card.appendChild(info);
 
-      // ── 우측: 수정 / 삭제 ──
+      // ── 우측: + / 📞 / 수정 / 삭제 ──
       const actions = document.createElement('div');
       actions.className = 'rest-card-actions';
 
+      // + 사진 추가 버튼
+      const addImgBtn = document.createElement('div');
+      addImgBtn.className = 'rest-img-add';
+      addImgBtn.textContent = '+';
+      addImgBtn.title = '사진 추가';
+      addImgBtn.onclick = () => { _restImgTarget = { type, id }; document.getElementById('restImgFileInput').click(); };
+      actions.appendChild(addImgBtn);
+
+      // 📞 전화 버튼
+      const callBtn = document.createElement('button');
+      callBtn.className = 'rest-card-call';
+      callBtn.textContent = '📞';
+      if (rest.phone) {
+        callBtn.onclick = (e) => { e.stopPropagation(); window.location.href = `tel:${rest.phone.replace(/[^0-9]/g,'')}`; };
+      } else {
+        callBtn.style.opacity = '0.3'; callBtn.style.cursor = 'default';
+      }
+      actions.appendChild(callBtn);
+
+      // 수정 버튼
       const editBtn = document.createElement('button');
       editBtn.className = 'rest-card-edit';
       editBtn.textContent = '수정';
       editBtn.onclick = () => toggleRestEditForm(wrap, type, id, rest);
       actions.appendChild(editBtn);
 
+      // 삭제 버튼
       const delBtn = document.createElement('button');
       delBtn.className = 'rest-card-del';
       delBtn.textContent = '삭제';
