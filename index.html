@@ -729,6 +729,13 @@
     border: 1px solid #d8b4fe; border-radius: 6px; padding: 3px 6px; cursor: pointer;
   }
   .rest-card-edit:active { background: #e9d5ff; }
+  /* 이동 선택 모드 카드 */
+  .rest-card-selectable {
+    cursor: pointer !important;
+    outline: 2px dashed #ef4444;
+    outline-offset: -2px;
+  }
+  .rest-card-selectable:hover { background: #fef2f2 !important; }
   /* 사진 추가 + 버튼 */
   .rest-img-add {
     width: 26px; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border);
@@ -1317,7 +1324,14 @@
   <div class="rest-modal-box">
     <div class="rest-modal-title">
       <span>🍴 식당 추천</span>
-      <button class="mdp-admin-btn green" id="recAddToggleBtn" onclick="toggleRestForm('rec',true)">➕ 추가</button>
+      <div style="display:flex;gap:5px;">
+        <button class="mdp-admin-btn" id="recMoveBtn" onclick="toggleRecMoveMode()"
+          style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.5);color:#b91c1c;">⭐ Favorite로 이동</button>
+        <button class="mdp-admin-btn green" id="recAddToggleBtn" onclick="toggleRestForm('rec',true)">➕ 추가</button>
+      </div>
+    </div>
+    <div id="recMoveModeHint" style="display:none;font-size:11px;color:#b91c1c;font-weight:700;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:6px 10px;margin-bottom:6px;">
+      ✋ 이동할 식당을 선택하세요
     </div>
     <div class="rest-add-form" id="recAddForm">
       <div class="rest-add-row">
@@ -2553,6 +2567,7 @@
   let favData = {};   // jst_favorites
   let recData = {};   // jst_recommend
   let _restImgTarget = { type: '', id: '' };
+  let _recMoveMode = false;  // 식당추천 → Favorite 이동 선택 모드
 
   async function loadRestData(type) {
     const key = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
@@ -2580,7 +2595,58 @@
     renderRestList('rec');
     document.getElementById('recModal').classList.add('show');
   };
-  window.closeRecModal = function() { document.getElementById('recModal').classList.remove('show'); };
+  window.closeRecModal = function() {
+    _recMoveMode = false;
+    document.getElementById('recModal').classList.remove('show');
+  };
+
+  // ── 이동 선택 모드 토글 ──
+  window.toggleRecMoveMode = function() {
+    _recMoveMode = !_recMoveMode;
+    const btn = document.getElementById('recMoveBtn');
+    const hint = document.getElementById('recMoveModeHint');
+    const addBtn = document.getElementById('recAddToggleBtn');
+    if (_recMoveMode) {
+      btn.style.background = 'rgba(239,68,68,0.4)';
+      btn.style.borderColor = '#ef4444';
+      btn.textContent = '✖ 취소';
+      hint.style.display = '';
+      addBtn.style.display = 'none';
+      toggleRestForm('rec', false);
+    } else {
+      btn.style.background = 'rgba(239,68,68,0.15)';
+      btn.style.borderColor = 'rgba(239,68,68,0.5)';
+      btn.textContent = '⭐ Favorite로 이동';
+      hint.style.display = 'none';
+      addBtn.style.display = '';
+    }
+    renderRestList('rec');
+  };
+
+  // ── 식당추천 → Favorite 이동 ──
+  window.moveRecToFav = async function(id) {
+    const rest = recData[id];
+    if (!rest) return;
+    try {
+      // Favorite에 추가
+      const newId = 'fav_' + Date.now();
+      await set(ref(db, `jst_favorites/${newId}`), { ...rest });
+      favData[newId] = { ...rest };
+      // 식당추천에서 삭제
+      await remove(ref(db, `jst_recommend/${id}`));
+      delete recData[id];
+      // 모드 해제 후 재렌더
+      _recMoveMode = false;
+      const btn = document.getElementById('recMoveBtn');
+      if (btn) { btn.style.background='rgba(239,68,68,0.15)'; btn.style.borderColor='rgba(239,68,68,0.5)'; btn.textContent='⭐ Favorite로 이동'; }
+      const hint = document.getElementById('recMoveModeHint');
+      if (hint) hint.style.display = 'none';
+      const addBtn = document.getElementById('recAddToggleBtn');
+      if (addBtn) addBtn.style.display = '';
+      renderRestList('rec');
+      showToast(`"${rest.name}" → Favorite로 이동 완료 ✓`, 'success');
+    } catch(e) { showToast('이동 실패: '+e.message, 'error'); }
+  };
 
   window.toggleRestForm = function(type, show) {
     const formId = type === 'fav' ? 'favAddForm' : 'recAddForm';
@@ -2651,6 +2717,12 @@
       // 카드 wrapper
       const wrap = document.createElement('div');
       wrap.style.cssText = 'border:1px solid var(--border);border-radius:10px;overflow:hidden;background:white;';
+
+      // rec 이동 선택 모드: 카드 전체 클릭 가능하게
+      if (type === 'rec' && _recMoveMode) {
+        wrap.classList.add('rest-card-selectable');
+        wrap.onclick = () => moveRecToFav(id);
+      }
 
       // ── 메인 행 ──
       const card = document.createElement('div');
