@@ -3026,18 +3026,42 @@
       const editForm = document.createElement('div');
       editForm.className = 'rest-edit-form';
       editForm.id = `editForm_${id}`;
-      editForm.innerHTML = `
-        <input type="text" class="rest-edit-inp" id="editName_${id}" placeholder="식당명 *" maxlength="20" value="${rest.name||''}">
-        <div style="display:flex;gap:5px;">
-          <input type="text" class="rest-edit-inp" id="editPhone_${id}" placeholder="연락처" maxlength="14" value="${rest.phone||''}"
-            oninput="this.value=this.value.replace(/[^0-9-]/g,'')">
-          <input type="text" class="rest-edit-inp" id="editMenu_${id}" placeholder="주메뉴" maxlength="30" value="${rest.menu||''}">
-        </div>
-        <div class="rest-err" id="editErr_${id}"></div>
-        <div class="rest-edit-btns">
-          <button class="rest-edit-save" onclick="saveRestEdit('${type}','${id}')">저장</button>
-          <button class="rest-edit-cancel" onclick="closeRestEditForm('${id}')">취소</button>
-        </div>`;
+
+      const nameInp = document.createElement('input');
+      nameInp.type = 'text'; nameInp.className = 'rest-edit-inp';
+      nameInp.id = `editName_${id}`; nameInp.placeholder = '식당명 *';
+      nameInp.maxLength = 20; nameInp.value = rest.name || '';
+
+      const row2 = document.createElement('div');
+      row2.style.cssText = 'display:flex;gap:5px;';
+      const phoneInp = document.createElement('input');
+      phoneInp.type = 'text'; phoneInp.className = 'rest-edit-inp';
+      phoneInp.id = `editPhone_${id}`; phoneInp.placeholder = '연락처';
+      phoneInp.maxLength = 14; phoneInp.value = rest.phone || '';
+      phoneInp.oninput = function(){ this.value = this.value.replace(/[^0-9-]/g,''); };
+      const menuInp = document.createElement('input');
+      menuInp.type = 'text'; menuInp.className = 'rest-edit-inp';
+      menuInp.id = `editMenu_${id}`; menuInp.placeholder = '주메뉴';
+      menuInp.maxLength = 30; menuInp.value = rest.menu || '';
+      row2.appendChild(phoneInp); row2.appendChild(menuInp);
+
+      const errDiv = document.createElement('div');
+      errDiv.className = 'rest-err'; errDiv.id = `editErr_${id}`;
+
+      const btns = document.createElement('div');
+      btns.className = 'rest-edit-btns';
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'rest-edit-save'; saveBtn.textContent = '저장';
+      saveBtn.addEventListener('click', () => saveRestEdit(type, id));
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'rest-edit-cancel'; cancelBtn.textContent = '취소';
+      cancelBtn.addEventListener('click', () => closeRestEditForm(id));
+      btns.appendChild(saveBtn); btns.appendChild(cancelBtn);
+
+      editForm.appendChild(nameInp);
+      editForm.appendChild(row2);
+      editForm.appendChild(errDiv);
+      editForm.appendChild(btns);
       wrap.appendChild(editForm);
 
       el.appendChild(wrap);
