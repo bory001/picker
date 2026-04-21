@@ -676,6 +676,22 @@
     cursor: pointer; font-family: inherit; transition: all 0.12s;
   }
   .cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+  /* 식당/카페 대분류 탭 */
+  .fav-type-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .fav-type-tab {
+    flex: 1; padding: 7px 4px; border-radius: 10px; font-size: 13px; font-weight: 700;
+    border: 1.5px solid var(--border); background: var(--bg); color: var(--text-muted);
+    cursor: pointer; font-family: inherit; text-align: center; transition: all 0.15s;
+  }
+  .fav-type-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+  /* 음식 카테고리 필터 (조회용) */
+  .fav-filter-bar { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .fav-filter-btn {
+    padding: 3px 10px; border-radius: 14px; font-size: 11px; font-weight: 700;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-muted);
+    cursor: pointer; font-family: inherit; transition: all 0.12s;
+  }
+  .fav-filter-btn.active { background: var(--primary-light); color: white; border-color: var(--primary-light); }
 
   .rest-add-form {
     background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
@@ -1009,7 +1025,7 @@
     </div>
     <!-- 2행: Favorite + 식당추천 -->
     <div class="header-row2">
-      <button class="hdr-btn" onclick="openFavModal()" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.6);">⭐ Favorite</button>
+      <button class="hdr-btn" onclick="openFavModal()" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.6);">⭐ 즐겨찾기</button>
       <button class="hdr-btn" onclick="openRecModal()" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.7);">🍴 식당추천</button>
     </div>
   </header>
@@ -1330,33 +1346,48 @@
   </div>
 </div>
 
-<!-- ⭐ Favorite 모달 -->
+<!-- ⭐ 즐겨찾기 모달 -->
 <div class="rest-modal-overlay" id="favModal">
   <div class="rest-modal-box">
     <div class="rest-modal-title">
-      <span>⭐ 즐겨찾는 식당</span>
+      <span>⭐ 즐겨찾기</span>
       <button class="mdp-admin-btn green" id="favAddToggleBtn" onclick="toggleRestForm('fav',true)">➕ 추가</button>
     </div>
+    <!-- 식당 / 카페 대분류 탭 -->
+    <div class="fav-type-tabs">
+      <button class="fav-type-tab active" id="favTypeFood" onclick="setFavType('food',this)">🍽️ 식당</button>
+      <button class="fav-type-tab" id="favTypeCafe" onclick="setFavType('cafe',this)">☕ 카페</button>
+    </div>
+    <!-- 음식 카테고리 필터 (식당 탭에서만 표시) -->
+    <div class="fav-filter-bar" id="favFilterBar">
+      <button class="fav-filter-btn active" data-filter="" onclick="setFavFilter('',this)">전체</button>
+      <button class="fav-filter-btn" data-filter="한식" onclick="setFavFilter('한식',this)">🍚 한식</button>
+      <button class="fav-filter-btn" data-filter="중식" onclick="setFavFilter('중식',this)">🥢 중식</button>
+      <button class="fav-filter-btn" data-filter="일식" onclick="setFavFilter('일식',this)">🍣 일식</button>
+      <button class="fav-filter-btn" data-filter="양식" onclick="setFavFilter('양식',this)">🍝 양식</button>
+    </div>
+    <!-- 추가 폼 -->
     <div class="rest-add-form" id="favAddForm">
-      <div class="cat-btns">
+      <!-- 추가 시 카테고리 선택 (식당/카페에 따라 JS로 변경) -->
+      <div class="cat-btns" id="favCatBtns">
         <button type="button" class="cat-btn" data-cat="한식" onclick="selectCat(this)">🍚 한식</button>
         <button type="button" class="cat-btn" data-cat="중식" onclick="selectCat(this)">🥢 중식</button>
         <button type="button" class="cat-btn" data-cat="일식" onclick="selectCat(this)">🍣 일식</button>
         <button type="button" class="cat-btn" data-cat="양식" onclick="selectCat(this)">🍝 양식</button>
       </div>
       <div class="rest-add-row">
-        <input type="text" class="rest-add-inp" id="favInpName" placeholder="식당명 *" maxlength="20">
+        <input type="text" class="rest-add-inp" id="favInpName" placeholder="이름 *" maxlength="20">
         <input type="text" class="rest-add-inp" id="favInpPhone" placeholder="연락처" maxlength="14"
           oninput="this.value=this.value.replace(/[^0-9-]/g,'')">
       </div>
-      <input type="text" class="rest-add-inp" id="favInpMenu" placeholder="주메뉴 (예: 삼겹살, 된장찌개)" maxlength="30">
+      <input type="text" class="rest-add-inp" id="favInpMenu" placeholder="주메뉴 / 추천메뉴" maxlength="30">
       <div class="rest-err" id="favAddErr"></div>
       <div class="rest-add-btns">
         <button class="rest-save-btn" onclick="saveRest('fav')">저장</button>
         <button class="rest-cancel-btn" onclick="toggleRestForm('fav',false)">취소</button>
       </div>
     </div>
-    <div class="rest-list" id="favList"><div class="rest-empty">등록된 식당이 없어요</div></div>
+    <div class="rest-list" id="favList"><div class="rest-empty">등록된 항목이 없어요</div></div>
     <button class="mdb-close-btn" onclick="closeFavModal()" style="margin-top:0.6rem;">닫기</button>
   </div>
 </div>
@@ -1368,7 +1399,7 @@
       <span>🍴 식당 추천</span>
       <div style="display:flex;gap:5px;">
         <button class="mdp-admin-btn" id="recMoveBtn" onclick="toggleRecMoveMode()"
-          style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.5);color:#b91c1c;">⭐ Favorite로 이동</button>
+          style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.5);color:#b91c1c;">⭐ 즐겨찾기로 이동</button>
         <button class="mdp-admin-btn green" id="recAddToggleBtn" onclick="toggleRestForm('rec',true)">➕ 추가</button>
       </div>
     </div>
@@ -2808,11 +2839,13 @@
   let recData = {};   // jst_recommend
   let _restImgTarget = { type: '', id: '' };
   let _recMoveMode = false;  // 식당추천 → Favorite 이동 선택 모드
-  let _favCat = '';   // 선택된 카테고리
+  let _favCat = '';     // 추가 시 선택된 카테고리
+  let _favType = 'food'; // 현재 대분류: 'food' | 'cafe'
+  let _favFilter = '';   // 음식 카테고리 필터
 
   window.selectCat = function(btn) {
     _favCat = btn.dataset.cat;
-    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.closest('.cat-btns').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   };
 
@@ -2821,6 +2854,36 @@
     if (infoEl) infoEl.dataset.editCat = btn.dataset.cat;
     btn.closest('.cat-btns').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+  };
+
+  // 식당 / 카페 대분류 전환
+  window.setFavType = function(type, btn) {
+    _favType = type;
+    _favFilter = '';
+    document.querySelectorAll('.fav-type-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    // 필터바: 식당만 표시
+    const filterBar = document.getElementById('favFilterBar');
+    if (filterBar) filterBar.style.display = type === 'food' ? 'flex' : 'none';
+    // 전체 필터 초기화
+    document.querySelectorAll('.fav-filter-btn').forEach(b => b.classList.remove('active'));
+    const allBtn = document.querySelector('.fav-filter-btn[data-filter=""]');
+    if (allBtn) allBtn.classList.add('active');
+    // 추가 폼 카테고리 버튼 교체
+    const catBtns = document.getElementById('favCatBtns');
+    if (catBtns) catBtns.style.display = type === 'food' ? 'flex' : 'none';
+    // 추가 폼 닫기
+    toggleRestForm('fav', false);
+    _favCat = '';
+    renderRestList('fav');
+  };
+
+  // 음식 카테고리 필터
+  window.setFavFilter = function(filter, btn) {
+    _favFilter = filter;
+    document.querySelectorAll('.fav-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderRestList('fav');
   };
 
   async function loadRestData(type) {
@@ -2837,6 +2900,18 @@
 
   window.openFavModal = async function() {
     await loadRestData('fav');
+    _favType = 'food'; _favFilter = ''; _favCat = '';
+    // 탭 초기화
+    document.querySelectorAll('.fav-type-tab').forEach(t => t.classList.remove('active'));
+    const foodTab = document.getElementById('favTypeFood');
+    if (foodTab) foodTab.classList.add('active');
+    const filterBar = document.getElementById('favFilterBar');
+    if (filterBar) filterBar.style.display = 'flex';
+    document.querySelectorAll('.fav-filter-btn').forEach(b => b.classList.remove('active'));
+    const allBtn = document.querySelector('.fav-filter-btn[data-filter=""]');
+    if (allBtn) allBtn.classList.add('active');
+    const catBtns = document.getElementById('favCatBtns');
+    if (catBtns) catBtns.style.display = 'flex';
     toggleRestForm('fav', false);
     renderRestList('fav');
     document.getElementById('favModal').classList.add('show');
@@ -2870,7 +2945,7 @@
     } else {
       btn.style.background = 'rgba(239,68,68,0.15)';
       btn.style.borderColor = 'rgba(239,68,68,0.5)';
-      btn.textContent = '⭐ Favorite로 이동';
+      btn.textContent = '⭐ 즐겨찾기로 이동';
       hint.style.display = 'none';
       addBtn.style.display = '';
     }
@@ -2892,7 +2967,7 @@
       // 모드 해제 후 재렌더
       _recMoveMode = false;
       const btn = document.getElementById('recMoveBtn');
-      if (btn) { btn.style.background='rgba(239,68,68,0.15)'; btn.style.borderColor='rgba(239,68,68,0.5)'; btn.textContent='⭐ Favorite로 이동'; }
+      if (btn) { btn.style.background='rgba(239,68,68,0.15)'; btn.style.borderColor='rgba(239,68,68,0.5)'; btn.textContent='⭐ 즐겨찾기로 이동'; }
       const hint = document.getElementById('recMoveModeHint');
       if (hint) hint.style.display = 'none';
       const addBtn = document.getElementById('recAddToggleBtn');
@@ -2910,7 +2985,11 @@
       // 카테고리 초기화 (fav만)
       if (type === 'fav') {
         _favCat = '';
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        const catBtns = document.getElementById('favCatBtns');
+        if (catBtns) {
+          catBtns.style.display = _favType === 'food' ? 'flex' : 'none';
+        }
+        document.querySelectorAll('#favCatBtns .cat-btn').forEach(b => b.classList.remove('active'));
       }
       const n = document.getElementById(type === 'fav' ? 'favInpName' : 'recInpName');
       if (n) { n.value = ''; setTimeout(() => n.focus(), 80); }
@@ -2937,7 +3016,10 @@
     try {
       const id = (type === 'fav' ? 'fav_' : 'rec_') + Date.now();
       const obj = { name, phone: phone||'', menu: menu||'', images: [] };
-      if (type === 'fav' && _favCat) obj.cat = _favCat;
+      if (type === 'fav') {
+        obj.fav_type = _favType; // 'food' or 'cafe'
+        if (_favType === 'food' && _favCat) obj.cat = _favCat;
+      }
       await set(ref(db, `${dbKey}/${id}`), obj);
       const d = getRestData(type); d[id] = obj;
       toggleRestForm(type, false);
@@ -2960,12 +3042,27 @@
     const listId = type === 'fav' ? 'favList' : 'recList';
     const el = document.getElementById(listId);
     const d = getRestData(type);
-    const entries = Object.entries(d);
+    let entries = Object.entries(d);
+
+    // fav: 대분류(식당/카페) + 카테고리 필터 적용
+    if (type === 'fav') {
+      entries = entries.filter(([, rest]) => {
+        const ft = rest.fav_type || 'food';
+        if (_favType === 'food') {
+          if (ft !== 'food') return false;
+          if (_favFilter && rest.cat !== _favFilter) return false;
+        } else {
+          if (ft !== 'cafe') return false;
+        }
+        return true;
+      });
+    }
+
     if (entries.length === 0) {
-      el.innerHTML = '<div class="rest-empty">등록된 식당이 없어요</div>'; return;
+      el.innerHTML = '<div class="rest-empty">등록된 항목이 없어요</div>'; return;
     }
     el.innerHTML = '';
-    // 최신순 정렬 (id에 타임스탬프 포함)
+    // 최신순 정렬
     entries.sort((a, b) => {
       const ta = parseInt(a[0].replace(/\D/g,'')) || 0;
       const tb = parseInt(b[0].replace(/\D/g,'')) || 0;
