@@ -1029,6 +1029,7 @@
     </div>
     <!-- 2행: Favorite + 식당추천 -->
     <div class="header-row2">
+      <button class="hdr-btn" onclick="openSharedFavModal()" style="background:rgba(255,140,0,0.2);border-color:rgba(255,140,0,0.7);color:white;">🌐 즐겨찾기(공유)</button>
       <button class="hdr-btn" onclick="openFavModal()" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.6);">⭐ 즐겨찾기</button>
       <button class="hdr-btn" onclick="openRecModal()" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.7);">🍴 식당추천</button>
     </div>
@@ -1350,12 +1351,60 @@
   </div>
 </div>
 
+<!-- 🌐 즐겨찾기(공유) 모달 -->
+<div class="rest-modal-overlay" id="sharedFavModal">
+  <div class="rest-modal-box">
+    <div class="rest-modal-title">
+      <span>🌐 즐겨찾기(공유)</span>
+      <button class="mdp-admin-btn green" id="sharedFavAddToggleBtn" onclick="toggleRestForm('shared',true)">➕ 추가</button>
+    </div>
+    <!-- 식당 / 카페 대분류 탭 -->
+    <div class="fav-type-tabs">
+      <button class="fav-type-tab active" id="sharedFavTypeFood" onclick="setSharedFavType('food',this)">🍽️ 식당</button>
+      <button class="fav-type-tab" id="sharedFavTypeCafe" onclick="setSharedFavType('cafe',this)">☕ 카페</button>
+    </div>
+    <!-- 음식 카테고리 필터 -->
+    <div class="fav-filter-bar" id="sharedFavFilterBar">
+      <button class="fav-filter-btn active" data-filter="" onclick="setSharedFavFilter('',this)">전체</button>
+      <button class="fav-filter-btn" data-filter="한식" onclick="setSharedFavFilter('한식',this)">🍚 한식</button>
+      <button class="fav-filter-btn" data-filter="중식" onclick="setSharedFavFilter('중식',this)">🥢 중식</button>
+      <button class="fav-filter-btn" data-filter="일식" onclick="setSharedFavFilter('일식',this)">🍣 일식</button>
+      <button class="fav-filter-btn" data-filter="양식" onclick="setSharedFavFilter('양식',this)">🍝 양식</button>
+    </div>
+    <!-- 추가 폼 -->
+    <div class="rest-add-form" id="sharedFavAddForm">
+      <div class="cat-btns" id="sharedFavCatBtns">
+        <button type="button" class="cat-btn" data-cat="한식" onclick="selectSharedCat(this)">🍚 한식</button>
+        <button type="button" class="cat-btn" data-cat="중식" onclick="selectSharedCat(this)">🥢 중식</button>
+        <button type="button" class="cat-btn" data-cat="일식" onclick="selectSharedCat(this)">🍣 일식</button>
+        <button type="button" class="cat-btn" data-cat="양식" onclick="selectSharedCat(this)">🍝 양식</button>
+      </div>
+      <div class="rest-add-row">
+        <input type="text" class="rest-add-inp" id="sharedFavInpName" placeholder="이름 *" maxlength="20">
+        <input type="text" class="rest-add-inp" id="sharedFavInpPhone" placeholder="연락처" maxlength="14"
+          oninput="this.value=this.value.replace(/[^0-9-]/g,'')">
+      </div>
+      <input type="text" class="rest-add-inp" id="sharedFavInpMenu" placeholder="주메뉴 / 추천메뉴" maxlength="30">
+      <div class="rest-err" id="sharedFavAddErr"></div>
+      <div class="rest-add-btns">
+        <button class="rest-save-btn" onclick="saveRest('shared')">저장</button>
+        <button class="rest-cancel-btn" onclick="toggleRestForm('shared',false)">취소</button>
+      </div>
+    </div>
+    <div class="rest-list" id="sharedFavList"><div class="rest-empty">등록된 항목이 없어요</div></div>
+    <button class="mdb-close-btn" onclick="closeSharedFavModal()" style="margin-top:0.6rem;">닫기</button>
+  </div>
+</div>
+
 <!-- ⭐ 즐겨찾기 모달 -->
 <div class="rest-modal-overlay" id="favModal">
   <div class="rest-modal-box">
     <div class="rest-modal-title">
       <span>⭐ 즐겨찾기</span>
-      <button class="mdp-admin-btn green" id="favAddToggleBtn" onclick="toggleRestForm('fav',true)">➕ 추가</button>
+      <div style="display:flex;gap:5px;">
+        <button class="mdp-admin-btn" onclick="copyFavToShared()" style="background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.6);color:#b45309;">🌐 공유로 복사</button>
+        <button class="mdp-admin-btn green" id="favAddToggleBtn" onclick="toggleRestForm('fav',true)">➕ 추가</button>
+      </div>
     </div>
     <!-- 식당 / 카페 대분류 탭 -->
     <div class="fav-type-tabs">
@@ -2877,13 +2926,20 @@
   document.getElementById('menuModal').addEventListener('click', function(e) { if(e.target===this) closeMenuModal(); });
 
   // ── Favorite / 식당추천 공용 함수 ──
-  let favData = {};   // jst_favorites
-  let recData = {};   // jst_recommend
+  let favData = {};       // 팀별 즐겨찾기
+  let recData = {};       // 팀별 식당추천
+  let sharedFavData = {}; // 전체공유 즐겨찾기 (jst_favorites 고정)
   let _restImgTarget = { type: '', id: '' };
-  let _recMoveMode = false;  // 식당추천 → Favorite 이동 선택 모드
-  let _favCat = '';     // 추가 시 선택된 카테고리
-  let _favType = 'food'; // 현재 대분류: 'food' | 'cafe'
-  let _favFilter = '';   // 음식 카테고리 필터
+  let _recMoveMode = false;
+  let _favCat = '';
+  let _favType = 'food';
+  let _favFilter = '';
+  let _sharedFavCat = '';
+  let _sharedFavType = 'food';
+  let _sharedFavFilter = '';
+
+  // 공유 즐겨찾기 고정 경로 (팀 무관)
+  const SHARED_FAV_KEY = 'jst_favorites';
 
   window.selectCat = function(btn) {
     _favCat = btn.dataset.cat;
@@ -2929,16 +2985,28 @@
   };
 
   async function loadRestData(type) {
-    const key = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
+    const key = type === 'shared' ? SHARED_FAV_KEY
+              : type === 'fav' ? `${dbPrefix()}favorites`
+              : `${dbPrefix()}recommend`;
     try {
       const snap = await get(ref(db, key));
       const val = snap.exists() ? (snap.val()||{}) : {};
-      if (type === 'fav') favData = val; else recData = val;
+      if (type === 'fav') favData = val;
+      else if (type === 'rec') recData = val;
+      else sharedFavData = val;
     } catch(e) {}
   }
 
-  function getRestData(type) { return type === 'fav' ? favData : recData; }
-  function setRestData(type, data) { if (type === 'fav') favData = data; else recData = data; }
+  function getRestData(type) {
+    if (type === 'fav') return favData;
+    if (type === 'rec') return recData;
+    return sharedFavData;
+  }
+  function setRestData(type, data) {
+    if (type === 'fav') favData = data;
+    else if (type === 'rec') recData = data;
+    else sharedFavData = data;
+  }
 
   window.openFavModal = async function() {
     await loadRestData('fav');
@@ -2959,6 +3027,78 @@
     document.getElementById('favModal').classList.add('show');
   };
   window.closeFavModal = function() { document.getElementById('favModal').classList.remove('show'); };
+
+  // ── 공유 즐겨찾기 ──
+  window.openSharedFavModal = async function() {
+    await loadRestData('shared');
+    _sharedFavType = 'food'; _sharedFavFilter = ''; _sharedFavCat = '';
+    document.querySelectorAll('#sharedFavModal .fav-type-tab').forEach(t => t.classList.remove('active'));
+    const ft = document.getElementById('sharedFavTypeFood');
+    if (ft) ft.classList.add('active');
+    const fb = document.getElementById('sharedFavFilterBar');
+    if (fb) fb.style.display = 'flex';
+    document.querySelectorAll('#sharedFavModal .fav-filter-btn').forEach(b => b.classList.remove('active'));
+    const allBtn = document.querySelector('#sharedFavModal .fav-filter-btn[data-filter=""]');
+    if (allBtn) allBtn.classList.add('active');
+    const cb = document.getElementById('sharedFavCatBtns');
+    if (cb) cb.style.display = 'flex';
+    toggleRestForm('shared', false);
+    renderRestList('shared');
+    document.getElementById('sharedFavModal').classList.add('show');
+  };
+
+  window.closeSharedFavModal = function() {
+    document.getElementById('sharedFavModal').classList.remove('show');
+  };
+
+  window.setSharedFavType = function(type, btn) {
+    _sharedFavType = type; _sharedFavFilter = '';
+    document.querySelectorAll('#sharedFavModal .fav-type-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const fb = document.getElementById('sharedFavFilterBar');
+    if (fb) fb.style.display = type === 'food' ? 'flex' : 'none';
+    document.querySelectorAll('#sharedFavModal .fav-filter-btn').forEach(b => b.classList.remove('active'));
+    const allBtn = document.querySelector('#sharedFavModal .fav-filter-btn[data-filter=""]');
+    if (allBtn) allBtn.classList.add('active');
+    const cb = document.getElementById('sharedFavCatBtns');
+    if (cb) cb.style.display = type === 'food' ? 'flex' : 'none';
+    toggleRestForm('shared', false); _sharedFavCat = '';
+    renderRestList('shared');
+  };
+
+  window.setSharedFavFilter = function(filter, btn) {
+    _sharedFavFilter = filter;
+    document.querySelectorAll('#sharedFavModal .fav-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderRestList('shared');
+  };
+
+  window.selectSharedCat = function(btn) {
+    _sharedFavCat = btn.dataset.cat;
+    document.getElementById('sharedFavCatBtns').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+
+  // 즐겨찾기 → 공유로 전체 복사
+  window.copyFavToShared = async function() {
+    const entries = Object.entries(favData);
+    if (entries.length === 0) { showToast('즐겨찾기에 항목이 없어요', ''); return; }
+    let count = 0;
+    try {
+      for (const [, rest] of entries) {
+        const newId = 'shared_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+        await set(ref(db, `${SHARED_FAV_KEY}/${newId}`), { ...rest });
+        sharedFavData[newId] = { ...rest };
+        count++;
+        await new Promise(r => setTimeout(r, 30)); // 충돌 방지
+      }
+      showToast(`${count}개 항목을 공유 즐겨찾기로 복사했어요 ✓`, 'success');
+    } catch(e) { showToast('복사 실패: '+e.message, 'error'); }
+  };
+
+  document.getElementById('sharedFavModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSharedFavModal();
+  });
 
   window.openRecModal = async function() {
     await loadRestData('rec');
@@ -3020,26 +3160,30 @@
   };
 
   window.toggleRestForm = function(type, show) {
-    const formId = type === 'fav' ? 'favAddForm' : 'recAddForm';
+    const formId = type === 'fav' ? 'favAddForm' : type === 'shared' ? 'sharedFavAddForm' : 'recAddForm';
     const form = document.getElementById(formId);
+    if (!form) return;
     if (show) {
       form.classList.add('open');
-      // 카테고리 초기화 (fav만)
       if (type === 'fav') {
         _favCat = '';
         const catBtns = document.getElementById('favCatBtns');
-        if (catBtns) {
-          catBtns.style.display = _favType === 'food' ? 'flex' : 'none';
-        }
+        if (catBtns) catBtns.style.display = _favType === 'food' ? 'flex' : 'none';
         document.querySelectorAll('#favCatBtns .cat-btn').forEach(b => b.classList.remove('active'));
+      } else if (type === 'shared') {
+        _sharedFavCat = '';
+        const catBtns = document.getElementById('sharedFavCatBtns');
+        if (catBtns) catBtns.style.display = _sharedFavType === 'food' ? 'flex' : 'none';
+        document.querySelectorAll('#sharedFavCatBtns .cat-btn').forEach(b => b.classList.remove('active'));
       }
-      const n = document.getElementById(type === 'fav' ? 'favInpName' : 'recInpName');
+      const pfx = type === 'fav' ? 'fav' : type === 'shared' ? 'sharedFav' : 'rec';
+      const n = document.getElementById(`${pfx}InpName`);
       if (n) { n.value = ''; setTimeout(() => n.focus(), 80); }
-      const p = document.getElementById(type === 'fav' ? 'favInpPhone' : 'recInpPhone');
+      const p = document.getElementById(`${pfx}InpPhone`);
       if (p) p.value = '';
-      const m = document.getElementById(type === 'fav' ? 'favInpMenu' : 'recInpMenu');
+      const m = document.getElementById(`${pfx}InpMenu`);
       if (m) m.value = '';
-      const e = document.getElementById(type === 'fav' ? 'favAddErr' : 'recAddErr');
+      const e = document.getElementById(`${pfx}AddErr`);
       if (e) e.textContent = '';
     } else {
       form.classList.remove('open');
@@ -3047,20 +3191,22 @@
   };
 
   window.saveRest = async function(type) {
-    const prefix = type === 'fav' ? 'fav' : 'rec';
-    const name  = document.getElementById(`${prefix}InpName`).value.trim();
-    const phone = document.getElementById(`${prefix}InpPhone`).value.trim();
-    const menu  = document.getElementById(`${prefix}InpMenu`).value.trim();
-    const errEl = document.getElementById(`${prefix}AddErr`);
+    const pfx = type === 'fav' ? 'fav' : type === 'shared' ? 'sharedFav' : 'rec';
+    const name  = document.getElementById(`${pfx}InpName`).value.trim();
+    const phone = document.getElementById(`${pfx}InpPhone`).value.trim();
+    const menu  = document.getElementById(`${pfx}InpMenu`).value.trim();
+    const errEl = document.getElementById(`${pfx}AddErr`);
     errEl.textContent = '';
     if (!name) { errEl.textContent = '식당명을 입력해주세요'; return; }
-    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
+    const dbKey = type === 'shared' ? SHARED_FAV_KEY : type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     try {
-      const id = (type === 'fav' ? 'fav_' : 'rec_') + Date.now();
+      const id = (type === 'shared' ? 'shared_' : type === 'fav' ? 'fav_' : 'rec_') + Date.now();
       const obj = { name, phone: phone||'', menu: menu||'', images: [] };
-      if (type === 'fav') {
-        obj.fav_type = _favType; // 'food' or 'cafe'
-        if (_favType === 'food' && _favCat) obj.cat = _favCat;
+      if (type === 'fav' || type === 'shared') {
+        const ft = type === 'shared' ? _sharedFavType : _favType;
+        const cat = type === 'shared' ? _sharedFavCat : _favCat;
+        obj.fav_type = ft;
+        if (ft === 'food' && cat) obj.cat = cat;
       }
       await set(ref(db, `${dbKey}/${id}`), obj);
       const d = getRestData(type); d[id] = obj;
@@ -3073,7 +3219,7 @@
   window.deleteRest = async function(type, id) {
     const d = getRestData(type);
     if (!confirm(`"${d[id]?.name}" 을 삭제할까요?`)) return;
-    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
+    const dbKey = type === 'shared' ? SHARED_FAV_KEY : type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     await remove(ref(db, `${dbKey}/${id}`));
     delete d[id];
     renderRestList(type);
@@ -3081,18 +3227,21 @@
   };
 
   function renderRestList(type) {
-    const listId = type === 'fav' ? 'favList' : 'recList';
+    const listId = type === 'fav' ? 'favList' : type === 'shared' ? 'sharedFavList' : 'recList';
     const el = document.getElementById(listId);
+    if (!el) return;
     const d = getRestData(type);
     let entries = Object.entries(d);
 
-    // fav: 대분류(식당/카페) + 카테고리 필터 적용
-    if (type === 'fav') {
+    // fav / shared: 대분류(식당/카페) + 카테고리 필터 적용
+    if (type === 'fav' || type === 'shared') {
+      const curType   = type === 'shared' ? _sharedFavType   : _favType;
+      const curFilter = type === 'shared' ? _sharedFavFilter : _favFilter;
       entries = entries.filter(([, rest]) => {
         const ft = rest.fav_type || 'food';
-        if (_favType === 'food') {
+        if (curType === 'food') {
           if (ft !== 'food') return false;
-          if (_favFilter && rest.cat !== _favFilter) return false;
+          if (curFilter && rest.cat !== curFilter) return false;
         } else {
           if (ft !== 'cafe') return false;
         }
@@ -3214,7 +3363,7 @@
           const cat   = infoEl.dataset.editCat || '';
           const errEl = document.getElementById(`ei_err_${id}`);
           if (!name) { if(errEl) errEl.textContent = '식당명을 입력해주세요'; return; }
-          const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
+          const dbKey = type === 'shared' ? SHARED_FAV_KEY : type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
           const d = getRestData(type);
           try {
             const updated = { ...(d[id]||{}), name, phone: phone||'', menu: menu||'' };
@@ -3262,7 +3411,7 @@
     const menu  = (document.getElementById(`editMenu_${id}`)?.value  || '').trim();
     const errEl = document.getElementById(`editErr_${id}`);
     if (!name) { if(errEl) errEl.textContent = '식당명을 입력해주세요'; return; }
-    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
+    const dbKey = type === 'shared' ? SHARED_FAV_KEY : type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     const d = getRestData(type);
     const existing = d[id] || {};
     try {
@@ -3281,7 +3430,7 @@
     const { type, id } = _restImgTarget;
     const d = getRestData(type);
     const rest = d[id]; if (!rest) return;
-    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
+    const dbKey = type === 'shared' ? SHARED_FAV_KEY : type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -3313,7 +3462,7 @@
     const rest = d[id]; if (!rest) return;
     const imgs = Array.isArray(rest.images) ? [...rest.images] : Object.values(rest.images||{});
     imgs.splice(idx, 1);
-    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
+    const dbKey = type === 'shared' ? SHARED_FAV_KEY : type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     await set(ref(db, `${dbKey}/${id}/images`), imgs);
     d[id].images = imgs;
     renderRestList(type);
