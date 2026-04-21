@@ -968,6 +968,10 @@
   </div>
   <div class="login-name-area">
     <div class="login-name-wrap">
+      <label class="login-name-label" style="color:rgba(255,255,255,0.85);">소속</label>
+      <input type="text" class="login-name-input" id="teamLoginInput"
+        placeholder="전산팀" maxlength="10" style="width:70px;"
+        onkeydown="if(event.key==='Enter') this.blur()">
       <label class="login-name-label" style="color:rgba(255,255,255,0.85);">성명</label>
       <input type="text" class="login-name-input" id="nameLoginInput"
         placeholder="홍길동" maxlength="10"
@@ -1502,6 +1506,14 @@
 
   // ── 상태 ──
   let currentUser = null;
+  let currentTeam = null;  // 소속 팀명 (DB prefix로 사용)
+
+  // ── DB 경로 prefix 생성 ──
+  // 전산팀 → 기존 경로(jst_) 유지, 다른 팀 → jst_{팀명}_
+  function dbPrefix() {
+    if (!currentTeam || currentTeam === '전산팀') return 'jst_';
+    return `jst_${currentTeam}_`;
+  }
   let attendanceData = {};
   let currentDate = new Date();
   let selectedDate = null;
@@ -1522,6 +1534,7 @@
   let memberData = {};
 
   const LOCAL_KEY = 'jst_user_name';
+  const LOCAL_TEAM_KEY = 'jst_user_team';
   const isMobile = () => window.innerWidth <= 768;
 
   // ── 유틸 ──
@@ -1544,18 +1557,20 @@
     return `${parseInt(m)}월 ${parseInt(d)}일`;
   }
 
-  // ── Firebase 비번 로드 ──
-  (async function loadPassword() {
+  // ── Firebase 비번 로드 (로그인 후 startListening에서 팀별 로드) ──
+  async function loadTeamPassword() {
     try {
-      const snap = await get(ref(db, 'jst_config/password'));
+      const snap = await get(ref(db, `${dbPrefix()}config/password`));
       if (snap.exists()) currentPassword = snap.val();
     } catch(e) {}
-  })();
+  }
 
   // ── 로그인 화면: 저장된 이름 자동 입력 ──
   (function initLoginHint() {
     const saved = localStorage.getItem(LOCAL_KEY);
     if (saved) document.getElementById('nameLoginInput').value = saved;
+    const savedTeam = localStorage.getItem(LOCAL_TEAM_KEY);
+    if (savedTeam) document.getElementById('teamLoginInput').value = savedTeam;
   })();
 
   // ── 키패드 ──
@@ -1603,9 +1618,18 @@
   };
 
   function checkAndLogin() {
+    const team = document.getElementById('teamLoginInput').value.trim();
     const name = document.getElementById('nameLoginInput').value.trim();
     const nameInp = document.getElementById('nameLoginInput');
+    const teamInp = document.getElementById('teamLoginInput');
     const errEl = document.getElementById('loginError');
+    if (!team) {
+      errEl.textContent = '소속을 입력해주세요';
+      teamInp.classList.add('error');
+      setTimeout(() => teamInp.classList.remove('error'), 400);
+      teamInp.focus();
+      _lockBuf = ''; updateDots(); return;
+    }
     if (!name) {
       errEl.textContent = '성명을 먼저 입력해주세요';
       nameInp.classList.add('error');
@@ -1616,18 +1640,24 @@
     const _isAdmin = (_lockBuf === ADMIN_PW);
     if (_lockBuf === currentPassword || _isAdmin) {
       localStorage.setItem(LOCAL_KEY, name);
+      localStorage.setItem(LOCAL_TEAM_KEY, team);
       currentUser = name;
+      currentTeam = team;
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
+      // 헤더 소속 표시
       const hn = document.getElementById('headerUserName'); if (hn) hn.textContent = name;
       const ub = document.getElementById('userBadge'); if (ub) ub.style.display = 'flex';
+      // 헤더 부제목에 소속 표시
+      const sub = document.querySelector('.header-left .subtitle');
+      if (sub) sub.textContent = `(${team})`;
       _lockBuf = '';
       startListening();
       if (_isAdmin) {
         isAdminMode = true;
         setTimeout(() => {
           const btn = document.getElementById('adminModeBtn');
-          if (btn) { btn.innerHTML = '⚙️ 관리중'; btn.style.background='rgba(255,100,0,0.4)'; btn.style.borderColor='rgba(255,100,0,0.8)'; }
+          if (btn) { btn.innerHTML='⚙️ 관리중'; btn.style.background='rgba(255,100,0,0.4)'; btn.style.borderColor='rgba(255,100,0,0.8)'; }
           document.getElementById('memberDbBtn').style.display = 'inline-block';
           showToast('관리자 모드로 로그인', 'success');
         }, 400);
@@ -1648,33 +1678,27 @@
   // ── Firebase 리스너 ──
   function startListening() {
     loadMemberData();
-    onValue(ref(db, 'jst_attendance'), (snap) => {
+    loadTeamPassword();
+    const p = dbPrefix();
+    onValue(ref(db, `${p}attendance`), (snap) => {
       attendanceData = snap.val() || {};
       renderCalendar();
       if (selectedDate) { renderSidebar(); renderMobilePanel(); }
       updateStats();
-      
-      
-    }, () => {
-      
-      
-    });
-    onValue(ref(db, 'jst_schedule'), (snap) => {
+    }, () => {});
+    onValue(ref(db, `${p}schedule`), (snap) => {
       const raw = snap.val() || {};
-      // 구 문자열 포맷 호환 (보탁에서 마이그레이션)
       scheduleData = {};
       Object.entries(raw).forEach(([k, v]) => {
         if (typeof v === 'string') {
           const idx = v.indexOf('|');
           scheduleData[k] = { emoji: idx >= 0 ? v.slice(0,idx) : '', title: idx >= 0 ? v.slice(idx+1) : v };
-        } else {
-          scheduleData[k] = v;
-        }
+        } else { scheduleData[k] = v; }
       });
       renderCalendar();
       if (selectedDate) { renderSchedBar(selectedDate); renderMobilePanel(); }
     });
-    onValue(ref(db, 'jst_absent'), (snap) => {
+    onValue(ref(db, `${p}absent`), (snap) => {
       _absentData = snap.val() || {};
       if (selectedDate) { renderMobilePanel(); renderSidebar(); }
     });
@@ -2149,12 +2173,12 @@
   async function addAttendance(dateKey, name) {
     setLoading(true);
     try {
-      await set(ref(db, `jst_attendance/${dateKey}/${name}`), {
+      await set(ref(db, `${dbPrefix()}attendance/${dateKey}/${name}`), {
         name, registeredAt: Date.now()
       });
       // 불참 등록돼 있으면 자동 해제
       if (_absentData[dateKey]?.[name]) {
-        await remove(ref(db, `jst_absent/${dateKey}/${name}`));
+        await remove(ref(db, `${dbPrefix()}absent/${dateKey}/${name}`));
         if (_absentData[dateKey]) delete _absentData[dateKey][name];
       }
       const [,m,d] = dateKey.split('-');
@@ -2166,7 +2190,7 @@
   async function removeAttendance(dateKey, name) {
     setLoading(true);
     try {
-      await remove(ref(db, `jst_attendance/${dateKey}/${name}`));
+      await remove(ref(db, `${dbPrefix()}attendance/${dateKey}/${name}`));
       showToast(`"${name}" 님의 참석이 취소되었습니다`);
     } catch(e) { showToast('취소 실패: '+e.message,'error'); }
     finally { setLoading(false); }
@@ -2192,7 +2216,7 @@
     const name = document.getElementById('mdpManualName').value.trim();
     if (!name) { showToast('이름을 입력해주세요','error'); return; }
     try {
-      await set(ref(db, `jst_attendance/${selectedDate}/${name}`), { name, registeredAt: Date.now() });
+      await set(ref(db, `${dbPrefix()}attendance/${selectedDate}/${name}`), { name, registeredAt: Date.now() });
       document.getElementById('mdpManualName').value = '';
       showToast(`${name} 등록 완료 ✓`, 'success');
     } catch(e) { showToast('등록 실패: '+e.message,'error'); }
@@ -2203,7 +2227,7 @@
     const name = document.getElementById('pcManualName').value.trim();
     if (!name) { showToast('이름을 입력해주세요','error'); return; }
     try {
-      await set(ref(db, `jst_attendance/${selectedDate}/${name}`), { name, registeredAt: Date.now() });
+      await set(ref(db, `${dbPrefix()}attendance/${selectedDate}/${name}`), { name, registeredAt: Date.now() });
       document.getElementById('pcManualName').value = '';
       showToast(`${name} 등록 완료 ✓`, 'success');
     } catch(e) { showToast('등록 실패: '+e.message,'error'); }
@@ -2277,7 +2301,7 @@
     localStorage.setItem('jst_last_time_m', m);
     setLoading(true);
     try {
-      await set(ref(db, `jst_attendance/${selectedDate}/${currentUser}/arrivalTime`), timeStr);
+      await set(ref(db, `${dbPrefix()}attendance/${selectedDate}/${currentUser}/arrivalTime`), timeStr);
       closeTimeModal();
       showToast(`시각 ${timeStr} 저장 완료 ⏰`, 'success');
     } catch(e) { showToast('저장 실패: '+e.message,'error'); }
@@ -2342,7 +2366,7 @@
       if (place)       obj.place  = place;
       if (gather)      obj.gather = gather;
       if (amount)      obj.amount = amount;
-      await set(ref(db, `jst_schedule/${selectedDate}`), obj);
+      await set(ref(db, `${dbPrefix()}schedule/${selectedDate}`), obj);
       closeScheduleModal();
       showToast('일정 정보 저장 완료 ✓', 'success');
     } catch(e) { document.getElementById('scheduleModalErr').textContent = '저장 실패: '+e.message; }
@@ -2351,7 +2375,7 @@
   window.clearScheduleInfo = async function() {
     if (!selectedDate) return;
     try {
-      await remove(ref(db, `jst_schedule/${selectedDate}`));
+      await remove(ref(db, `${dbPrefix()}schedule/${selectedDate}`));
       closeScheduleModal();
       showToast('일정 정보 삭제됨');
     } catch(e) { document.getElementById('scheduleModalErr').textContent = '삭제 실패: '+e.message; }
@@ -2583,7 +2607,7 @@
     if (nw === ADMIN_PW) { errEl.textContent='해당 번호는 사용할 수 없어요'; return; }
     if (nw !== cf) { errEl.textContent='새 비밀번호가 일치하지 않아요'; return; }
     try {
-      await set(ref(db,'jst_config/password'), nw);
+      await set(ref(db,`${dbPrefix()}config/password`), nw);
       currentPassword = nw;
       closePwModal();
       showToast('비밀번호가 변경되었어요! ✓','success');
@@ -2593,7 +2617,7 @@
   // ── 회원DB ──
   async function loadMemberData() {
     try {
-      const snap = await get(ref(db,'jst_members'));
+      const snap = await get(ref(db,`${dbPrefix()}members`));
       memberData = snap.exists() ? (snap.val()||{}) : {};
     } catch(e) { memberData={}; }
   }
@@ -2624,7 +2648,7 @@
     const n=name.trim(), p=normalizePhone(phone);
     if(!n) return '이름을 입력해주세요';
     if(!/^01[0-9]-\d{3,4}-\d{4}$/.test(p)) return '연락처 형식이 올바르지 않습니다';
-    await set(ref(db,`jst_members/${n}`),p);
+    await set(ref(db,`${dbPrefix()}members/${n}`),p);
     memberData[n]=p;
     return null;
   }
@@ -2695,7 +2719,7 @@
 
   window.mdbDelete = async function(name) {
     if(!confirm(`"${name}" 님을 삭제할까요?`))return;
-    await remove(ref(db,`jst_members/${name}`));
+    await remove(ref(db,`${dbPrefix()}members/${name}`));
     delete memberData[name];
     renderMdbList();
     showToast(`${name} 삭제 완료`);
@@ -2779,7 +2803,7 @@
     }
     if (!reason) { showToast('사유를 선택해주세요', 'error'); return; }
     try {
-      await set(ref(db, `jst_absent/${selectedDate}/${currentUser}`), { reason });
+      await set(ref(db, `${dbPrefix()}absent/${selectedDate}/${currentUser}`), { reason });
       if (!_absentData[selectedDate]) _absentData[selectedDate] = {};
       _absentData[selectedDate][currentUser] = { reason };
       document.getElementById('absentModal').classList.remove('show');
@@ -2792,7 +2816,7 @@
   window.cancelAbsent = async function() {
     if (!selectedDate) return;
     try {
-      await remove(ref(db, `jst_absent/${selectedDate}/${currentUser}`));
+      await remove(ref(db, `${dbPrefix()}absent/${selectedDate}/${currentUser}`));
       if (_absentData[selectedDate]) delete _absentData[selectedDate][currentUser];
       showToast('불참이 취소되었습니다');
       renderMobilePanel();
@@ -2823,9 +2847,9 @@
     const menu = document.getElementById('menuModalInput').value.trim();
     try {
       if (menu) {
-        await set(ref(db, `jst_attendance/${selectedDate}/${_menuTargetName}/menu`), menu);
+        await set(ref(db, `${dbPrefix()}attendance/${selectedDate}/${_menuTargetName}/menu`), menu);
       } else {
-        await remove(ref(db, `jst_attendance/${selectedDate}/${_menuTargetName}/menu`));
+        await remove(ref(db, `${dbPrefix()}attendance/${selectedDate}/${_menuTargetName}/menu`));
       }
       closeMenuModal();
       showToast(menu ? `메뉴 저장: ${menu} ✓` : '메뉴가 삭제됐어요', 'success');
@@ -2887,7 +2911,7 @@
   };
 
   async function loadRestData(type) {
-    const key = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
+    const key = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     try {
       const snap = await get(ref(db, key));
       const val = snap.exists() ? (snap.val()||{}) : {};
@@ -2959,10 +2983,10 @@
     try {
       // Favorite에 추가
       const newId = 'fav_' + Date.now();
-      await set(ref(db, `jst_favorites/${newId}`), { ...rest });
+      await set(ref(db, `${dbPrefix()}favorites/${newId}`), { ...rest });
       favData[newId] = { ...rest };
       // 식당추천에서 삭제
-      await remove(ref(db, `jst_recommend/${id}`));
+      await remove(ref(db, `${dbPrefix()}recommend/${id}`));
       delete recData[id];
       // 모드 해제 후 재렌더
       _recMoveMode = false;
@@ -3012,7 +3036,7 @@
     const errEl = document.getElementById(`${prefix}AddErr`);
     errEl.textContent = '';
     if (!name) { errEl.textContent = '식당명을 입력해주세요'; return; }
-    const dbKey = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
+    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     try {
       const id = (type === 'fav' ? 'fav_' : 'rec_') + Date.now();
       const obj = { name, phone: phone||'', menu: menu||'', images: [] };
@@ -3031,7 +3055,7 @@
   window.deleteRest = async function(type, id) {
     const d = getRestData(type);
     if (!confirm(`"${d[id]?.name}" 을 삭제할까요?`)) return;
-    const dbKey = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
+    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     await remove(ref(db, `${dbKey}/${id}`));
     delete d[id];
     renderRestList(type);
@@ -3172,7 +3196,7 @@
           const cat   = infoEl.dataset.editCat || '';
           const errEl = document.getElementById(`ei_err_${id}`);
           if (!name) { if(errEl) errEl.textContent = '식당명을 입력해주세요'; return; }
-          const dbKey = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
+          const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
           const d = getRestData(type);
           try {
             const updated = { ...(d[id]||{}), name, phone: phone||'', menu: menu||'' };
@@ -3220,7 +3244,7 @@
     const menu  = (document.getElementById(`editMenu_${id}`)?.value  || '').trim();
     const errEl = document.getElementById(`editErr_${id}`);
     if (!name) { if(errEl) errEl.textContent = '식당명을 입력해주세요'; return; }
-    const dbKey = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
+    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     const d = getRestData(type);
     const existing = d[id] || {};
     try {
@@ -3239,7 +3263,7 @@
     const { type, id } = _restImgTarget;
     const d = getRestData(type);
     const rest = d[id]; if (!rest) return;
-    const dbKey = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
+    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -3271,7 +3295,7 @@
     const rest = d[id]; if (!rest) return;
     const imgs = Array.isArray(rest.images) ? [...rest.images] : Object.values(rest.images||{});
     imgs.splice(idx, 1);
-    const dbKey = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
+    const dbKey = type === 'fav' ? `${dbPrefix()}favorites` : `${dbPrefix()}recommend`;
     await set(ref(db, `${dbKey}/${id}/images`), imgs);
     d[id].images = imgs;
     renderRestList(type);
