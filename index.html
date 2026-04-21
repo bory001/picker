@@ -3411,6 +3411,7 @@
         chk.textContent = _favCopySelected.has(id) ? '✓' : '';
         actions.appendChild(chk);
       } else {
+      const addImgBtn = document.createElement('div');
       addImgBtn.className = 'rest-img-add';
       addImgBtn.textContent = '+';
       addImgBtn.title = '사진 추가';
