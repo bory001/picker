@@ -736,14 +736,14 @@
   .rest-card-info { flex: 1; min-width: 0; }
   .rest-card-name { font-size: 13px; font-weight: 800; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rest-card-sub  { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* 우측 액션 버튼들 — 세로 2행 (위: +/📞, 아래: 수정/삭제) */
-  .rest-card-actions { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; align-items: stretch; }
-  .rest-card-actions-row { display: flex; gap: 3px; }
+  /* 우측 액션 버튼들 — 전화기(세로전체) + 우측열(+/수정/삭제) */
+  .rest-card-actions { display: flex; flex-direction: row; gap: 3px; flex-shrink: 0; align-items: stretch; }
+  .rest-card-actions-col { display: flex; flex-direction: column; gap: 3px; }
 
   .rest-card-call {
-    font-size: 14px; font-weight: 700; color: #1565c0;
+    font-size: 18px; font-weight: 700; color: #1565c0;
     background: #e3f2fd; border: none; border-radius: 6px;
-    width: 28px; height: 26px; cursor: pointer; white-space: nowrap;
+    width: 36px; height: 100%; min-height: 52px; cursor: pointer; white-space: nowrap;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .rest-card-call:active { background: #bbdefb; }
@@ -3402,17 +3402,7 @@
         chk.textContent = _favCopySelected.has(id) ? '✓' : '';
         actions.appendChild(chk);
       } else {
-      // 1행: + (사진추가) / 📞 (전화)
-      const row1 = document.createElement('div');
-      row1.className = 'rest-card-actions-row';
-
-      const addImgBtn = document.createElement('div');
-      addImgBtn.className = 'rest-img-add';
-      addImgBtn.textContent = '+';
-      addImgBtn.title = '사진 추가';
-      addImgBtn.onclick = () => { _restImgTarget = { type, id }; document.getElementById('restImgFileInput').click(); };
-      row1.appendChild(addImgBtn);
-
+      // 📞 전화버튼 (세로 전체 높이)
       const callBtn = document.createElement('button');
       callBtn.className = 'rest-card-call';
       callBtn.id = `restCall_${id}`;
@@ -3422,12 +3412,18 @@
       } else {
         callBtn.style.opacity = '0.3'; callBtn.style.cursor = 'default';
       }
-      row1.appendChild(callBtn);
-      actions.appendChild(row1);
+      actions.appendChild(callBtn);
 
-      // 2행: 수정 / 삭제
-      const row2 = document.createElement('div');
-      row2.className = 'rest-card-actions-row';
+      // 우측 컬럼: + / 수정 / 삭제
+      const col = document.createElement('div');
+      col.className = 'rest-card-actions-col';
+
+      const addImgBtn = document.createElement('div');
+      addImgBtn.className = 'rest-img-add';
+      addImgBtn.textContent = '+';
+      addImgBtn.title = '사진 추가';
+      addImgBtn.onclick = () => { _restImgTarget = { type, id }; document.getElementById('restImgFileInput').click(); };
+      col.appendChild(addImgBtn);
 
       // 수정 → 저장 토글 버튼
       const editBtn = document.createElement('button');
@@ -3480,9 +3476,14 @@
       delBtn.className = 'rest-card-del';
       delBtn.textContent = '삭제';
       delBtn.onclick = () => deleteRest(type, id);
-      row2.appendChild(editBtn);
-      row2.appendChild(delBtn);
-      actions.appendChild(row2);
+      col.appendChild(editBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'rest-card-del';
+      delBtn.textContent = '삭제';
+      delBtn.onclick = () => deleteRest(type, id);
+      col.appendChild(delBtn);
+      actions.appendChild(col);
 
       } // end else (not fav copy mode)
 
