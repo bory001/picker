@@ -265,7 +265,7 @@
   }
   .att-name-chip {
     background: var(--bg); border: 1px solid var(--border);
-    border-radius: 4px; padding: 2px 3px;
+    border-radius: 4px; padding: 0px 3px;
     font-size: 11px; font-weight: 600; color: var(--text);
     text-align: center; cursor: pointer; user-select: none;
     transition: all 0.12s; white-space: nowrap; display: inline-block;
@@ -391,13 +391,13 @@
     border-radius: 0 0 12px 12px;
   }
   @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-  .mdp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .mdp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
   .mdp-date { font-size: 15px; font-weight: 700; color: var(--primary); }
   .mdp-att-count {
     font-size: 12px; background: var(--accent-light); color: #065f46;
     border-radius: 20px; padding: 3px 10px; font-weight: 700;
   }
-  .mdp-att-grid { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 1rem; }
+  .mdp-att-grid { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 0.4rem; }
   .mdp-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 0.75rem 0 1rem; }
   .mdp-attend-btn {
     width: 100%; padding: 12px; border: none; border-radius: 10px;
@@ -743,7 +743,7 @@
   .rest-card-call {
     font-size: 14px; font-weight: 700; color: #1565c0;
     background: #e3f2fd; border: none; border-radius: 6px;
-    width: 44px; height: 26px; cursor: pointer; white-space: nowrap;
+    width: 28px; height: 26px; cursor: pointer; white-space: nowrap;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .rest-card-call:active { background: #bbdefb; }
@@ -1031,7 +1031,7 @@
     <button onclick="hardRefresh()"
       style="background:none;border:none;color:#ffffff;font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;font-family:inherit;padding:4px 6px;border-radius:6px;transition:color .2s;"
       onmouseenter="this.style.color='#3498db'" onmouseleave="this.style.color='#ffffff'">🔄 캐시 새로고침</button>
-    <div style="color:#ffffff;font-size:10px;letter-spacing:.5px;font-weight:700;">Made by 보령시 전산팀</div>
+    <div style="color:#ffffff;font-size:10px;letter-spacing:.5px;font-weight:700;">Made by yybest</div>
   </div>
 </div>
 
@@ -1056,7 +1056,7 @@
     </div>
     <!-- 2행: Favorite + 식당추천 -->
     <div class="header-row2">
-      <button class="hdr-btn" onclick="openSharedFavModal()" style="background:rgba(255,140,0,0.2);border-color:rgba(255,140,0,0.7);color:white;">🌐 보령맛집(전체공유)</button>
+      <button class="hdr-btn" onclick="openSharedFavModal()" style="background:rgba(255,140,0,0.2);border-color:rgba(255,140,0,0.7);color:white;">🌐 맛집(전체공유)</button>
       <button class="hdr-btn" onclick="openFavModal()" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.6);">⭐ 즐겨찾기</button>
       <button class="hdr-btn" onclick="openRecModal()" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.7);">🍴 식당추천</button>
     </div>
@@ -1378,11 +1378,11 @@
   </div>
 </div>
 
-<!-- 🌐 보령맛집(전체공유) 모달 -->
+<!-- 🌐 맛집(전체공유) 모달 -->
 <div class="rest-modal-overlay" id="sharedFavModal">
   <div class="rest-modal-box">
     <div class="rest-modal-title">
-      <span>🌐 보령맛집(전체공유)</span>
+      <span>🌐 맛집(전체공유)</span>
       <button class="mdp-admin-btn green" id="sharedFavAddToggleBtn" onclick="toggleRestForm('shared',true)">➕ 추가</button>
     </div>
     <!-- 식당 / 카페 대분류 탭 -->
@@ -1429,7 +1429,7 @@
     <div class="rest-modal-title">
       <span>⭐ 즐겨찾기</span>
       <div style="display:flex;gap:5px;">
-        <button class="mdp-admin-btn" onclick="copyFavToShared()" style="background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.6);color:#b45309;">🌐 맛집공유로 복사</button>
+        <button class="mdp-admin-btn" onclick="copyFavToShared()" style="background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.6);color:#b45309;">🌐 전체공유로 복사</button>
         <button class="mdp-admin-btn green" id="favAddToggleBtn" onclick="toggleRestForm('fav',true)">➕ 추가</button>
       </div>
     </div>
@@ -1468,7 +1468,7 @@
       </div>
     </div>
     <div id="favCopyExecRow" style="display:none;gap:6px;margin-bottom:6px;">
-      <button onclick="execFavCopyToShared()" style="flex:1;padding:8px 10px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">🌐 선택항목 맛집공유로 복사</button>
+      <button onclick="execFavCopyToShared()" style="flex:1;padding:8px 10px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">🌐 선택항목 전체공유로 복사</button>
       <button onclick="cancelFavCopyMode()" style="padding:8px 16px;background:white;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#64748b;">취소</button>
     </div>
     <div class="rest-list" id="favList"><div class="rest-empty">등록된 항목이 없어요</div></div>
@@ -3148,7 +3148,7 @@
     const execRow = document.getElementById('favCopyExecRow');
     if (execRow) {
       const btn = execRow.querySelector('button');
-      if (btn) btn.textContent = `🌐 선택항목 맛집공유로 복사 (${_favCopySelected.size}개)`;
+      if (btn) btn.textContent = `🌐 선택항목 전체공유로 복사 (${_favCopySelected.size}개)`;
     }
   };
 
