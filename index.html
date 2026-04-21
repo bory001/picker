@@ -3110,7 +3110,9 @@
       const info = document.createElement('div');
       info.className = 'rest-card-info';
       info.id = `restInfo_${id}`;
-      info.innerHTML = `<div class="rest-card-name">${rest.cat ? `<span style="font-size:10px;background:var(--primary);color:white;border-radius:4px;padding:1px 5px;margin-right:4px;font-weight:600;">${rest.cat}</span>` : ''}${rest.name}</div>
+      const catColors = { '한식':'background:var(--primary);color:white;', '중식':'background:#9b1c1c;color:white;', '일식':'background:#1e3a5f;color:#a5f3fc;', '양식':'background:#4a1d96;color:#e9d5ff;' };
+      const catStyle = rest.cat ? (catColors[rest.cat] || 'background:var(--primary);color:white;') : '';
+      info.innerHTML = `<div class="rest-card-name">${rest.cat ? `<span style="font-size:10px;${catStyle}border-radius:4px;padding:1px 5px;margin-right:4px;font-weight:600;">${rest.cat}</span>` : ''}${rest.name}</div>
         ${rest.menu  ? `<div class="rest-card-sub">📋 ${rest.menu}</div>`  : ''}
         ${rest.phone ? `<div class="rest-card-sub" style="color:#1565c0;">📞 ${rest.phone}</div>` : ''}`;
       card.appendChild(info);
