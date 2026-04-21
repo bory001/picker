@@ -668,6 +668,15 @@
     margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: space-between;
   }
   /* 컴팩트 추가 폼 */
+  /* 카테고리 선택 버튼 */
+  .cat-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+  .cat-btn {
+    padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    border: 1.5px solid var(--border); background: var(--bg); color: var(--text-muted);
+    cursor: pointer; font-family: inherit; transition: all 0.12s;
+  }
+  .cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
   .rest-add-form {
     background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
     padding: 8px 10px; margin-bottom: 8px; display: none; flex-direction: column; gap: 6px;
@@ -1329,6 +1338,12 @@
       <button class="mdp-admin-btn green" id="favAddToggleBtn" onclick="toggleRestForm('fav',true)">➕ 추가</button>
     </div>
     <div class="rest-add-form" id="favAddForm">
+      <div class="cat-btns">
+        <button type="button" class="cat-btn" data-cat="한식" onclick="selectCat(this)">🍚 한식</button>
+        <button type="button" class="cat-btn" data-cat="중식" onclick="selectCat(this)">🥢 중식</button>
+        <button type="button" class="cat-btn" data-cat="일식" onclick="selectCat(this)">🍣 일식</button>
+        <button type="button" class="cat-btn" data-cat="양식" onclick="selectCat(this)">🍝 양식</button>
+      </div>
       <div class="rest-add-row">
         <input type="text" class="rest-add-inp" id="favInpName" placeholder="식당명 *" maxlength="20">
         <input type="text" class="rest-add-inp" id="favInpPhone" placeholder="연락처" maxlength="14"
@@ -2793,6 +2808,20 @@
   let recData = {};   // jst_recommend
   let _restImgTarget = { type: '', id: '' };
   let _recMoveMode = false;  // 식당추천 → Favorite 이동 선택 모드
+  let _favCat = '';   // 선택된 카테고리
+
+  window.selectCat = function(btn) {
+    _favCat = btn.dataset.cat;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+
+  window.selectInlineCat = function(btn, id) {
+    const infoEl = btn.closest('.rest-card-info');
+    if (infoEl) infoEl.dataset.editCat = btn.dataset.cat;
+    btn.closest('.cat-btns').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
 
   async function loadRestData(type) {
     const key = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
@@ -2878,6 +2907,11 @@
     const form = document.getElementById(formId);
     if (show) {
       form.classList.add('open');
+      // 카테고리 초기화 (fav만)
+      if (type === 'fav') {
+        _favCat = '';
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      }
       const n = document.getElementById(type === 'fav' ? 'favInpName' : 'recInpName');
       if (n) { n.value = ''; setTimeout(() => n.focus(), 80); }
       const p = document.getElementById(type === 'fav' ? 'favInpPhone' : 'recInpPhone');
@@ -2903,6 +2937,7 @@
     try {
       const id = (type === 'fav' ? 'fav_' : 'rec_') + Date.now();
       const obj = { name, phone: phone||'', menu: menu||'', images: [] };
+      if (type === 'fav' && _favCat) obj.cat = _favCat;
       await set(ref(db, `${dbKey}/${id}`), obj);
       const d = getRestData(type); d[id] = obj;
       toggleRestForm(type, false);
@@ -2978,7 +3013,7 @@
       const info = document.createElement('div');
       info.className = 'rest-card-info';
       info.id = `restInfo_${id}`;
-      info.innerHTML = `<div class="rest-card-name">${rest.name}</div>
+      info.innerHTML = `<div class="rest-card-name">${rest.cat ? `<span style="font-size:10px;background:var(--primary);color:white;border-radius:4px;padding:1px 5px;margin-right:4px;font-weight:600;">${rest.cat}</span>` : ''}${rest.name}</div>
         ${rest.menu  ? `<div class="rest-card-sub">📋 ${rest.menu}</div>`  : ''}
         ${rest.phone ? `<div class="rest-card-sub" style="color:#1565c0;">📞 ${rest.phone}</div>` : ''}`;
       card.appendChild(info);
@@ -3016,10 +3051,14 @@
         if (!isEditing) {
           // 수정 모드: 텍스트 → input
           const cur = getRestData(type)[id] || {};
-          infoEl.innerHTML = `<input id="ei_name_${id}" class="rest-edit-inp" placeholder="식당명 *" maxlength="20" value="${cur.name||''}" style="margin-bottom:3px;">
+          const cats = ['한식','중식','일식','양식'];
+          const catHtml = cats.map(c => `<button type="button" class="cat-btn${cur.cat===c?' active':''}" data-cat="${c}" onclick="selectInlineCat(this,'${id}')">${c}</button>`).join('');
+          infoEl.innerHTML = `<div class="cat-btns" style="margin-bottom:4px;">${catHtml}</div>
+            <input id="ei_name_${id}" class="rest-edit-inp" placeholder="식당명 *" maxlength="20" value="${cur.name||''}" style="margin-bottom:3px;">
             <input id="ei_phone_${id}" class="rest-edit-inp" placeholder="연락처" maxlength="14" value="${cur.phone||''}" style="margin-bottom:3px;">
             <input id="ei_menu_${id}" class="rest-edit-inp" placeholder="주메뉴" maxlength="30" value="${cur.menu||''}">
             <div class="rest-err" id="ei_err_${id}"></div>`;
+          infoEl.dataset.editCat = cur.cat || '';
           document.getElementById(`ei_phone_${id}`).oninput = function(){ this.value=this.value.replace(/[^0-9-]/g,''); };
           editBtn.textContent = '저장';
           editBtn.style.cssText = 'background:#059669;color:white;border-color:#059669;font-size:11px;border-radius:6px;padding:3px 6px;cursor:pointer;font-family:inherit;';
@@ -3031,12 +3070,14 @@
           const name  = (document.getElementById(`ei_name_${id}`)?.value  || '').trim();
           const phone = (document.getElementById(`ei_phone_${id}`)?.value || '').trim();
           const menu  = (document.getElementById(`ei_menu_${id}`)?.value  || '').trim();
+          const cat   = infoEl.dataset.editCat || '';
           const errEl = document.getElementById(`ei_err_${id}`);
           if (!name) { if(errEl) errEl.textContent = '식당명을 입력해주세요'; return; }
           const dbKey = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
           const d = getRestData(type);
           try {
             const updated = { ...(d[id]||{}), name, phone: phone||'', menu: menu||'' };
+            if (type === 'fav') { if (cat) updated.cat = cat; else delete updated.cat; }
             await set(ref(db, `${dbKey}/${id}`), updated);
             d[id] = updated;
             showToast(`"${name}" 수정 완료 ✓`, 'success');
