@@ -2974,9 +2974,10 @@
       }
       card.appendChild(imgSlot);
 
-      // ── 중앙: 식당 정보 ──
+      // ── 중앙: 식당 정보 (편집 가능) ──
       const info = document.createElement('div');
       info.className = 'rest-card-info';
+      info.id = `restInfo_${id}`;
       info.innerHTML = `<div class="rest-card-name">${rest.name}</div>
         ${rest.menu  ? `<div class="rest-card-sub">📋 ${rest.menu}</div>`  : ''}
         ${rest.phone ? `<div class="rest-card-sub" style="color:#1565c0;">📞 ${rest.phone}</div>` : ''}`;
@@ -2986,7 +2987,6 @@
       const actions = document.createElement('div');
       actions.className = 'rest-card-actions';
 
-      // + 사진 추가 버튼
       const addImgBtn = document.createElement('div');
       addImgBtn.className = 'rest-img-add';
       addImgBtn.textContent = '+';
@@ -2994,9 +2994,9 @@
       addImgBtn.onclick = () => { _restImgTarget = { type, id }; document.getElementById('restImgFileInput').click(); };
       actions.appendChild(addImgBtn);
 
-      // 📞 전화 버튼
       const callBtn = document.createElement('button');
       callBtn.className = 'rest-card-call';
+      callBtn.id = `restCall_${id}`;
       callBtn.textContent = '📞';
       if (rest.phone) {
         callBtn.onclick = (e) => { e.stopPropagation(); window.location.href = `tel:${rest.phone.replace(/[^0-9]/g,'')}`; };
@@ -3005,14 +3005,47 @@
       }
       actions.appendChild(callBtn);
 
-      // 수정 버튼
+      // 수정 → 저장 토글 버튼
       const editBtn = document.createElement('button');
       editBtn.className = 'rest-card-edit';
+      editBtn.id = `restEditBtn_${id}`;
       editBtn.textContent = '수정';
-      editBtn.onclick = () => toggleRestEditForm(wrap, type, id, rest);
+      editBtn.onclick = async () => {
+        const infoEl = document.getElementById(`restInfo_${id}`);
+        const isEditing = editBtn.textContent === '저장';
+        if (!isEditing) {
+          // 수정 모드: 텍스트 → input
+          const cur = getRestData(type)[id] || {};
+          infoEl.innerHTML = `<input id="ei_name_${id}" class="rest-edit-inp" placeholder="식당명 *" maxlength="20" value="${cur.name||''}" style="margin-bottom:3px;">
+            <input id="ei_phone_${id}" class="rest-edit-inp" placeholder="연락처" maxlength="14" value="${cur.phone||''}" style="margin-bottom:3px;">
+            <input id="ei_menu_${id}" class="rest-edit-inp" placeholder="주메뉴" maxlength="30" value="${cur.menu||''}">
+            <div class="rest-err" id="ei_err_${id}"></div>`;
+          document.getElementById(`ei_phone_${id}`).oninput = function(){ this.value=this.value.replace(/[^0-9-]/g,''); };
+          editBtn.textContent = '저장';
+          editBtn.style.cssText = 'background:#059669;color:white;border-color:#059669;font-size:11px;border-radius:6px;padding:3px 6px;cursor:pointer;font-family:inherit;';
+          const cb = document.getElementById(`restCall_${id}`);
+          if (cb) cb.style.display = 'none';
+          setTimeout(() => document.getElementById(`ei_name_${id}`)?.focus(), 80);
+        } else {
+          // 저장
+          const name  = (document.getElementById(`ei_name_${id}`)?.value  || '').trim();
+          const phone = (document.getElementById(`ei_phone_${id}`)?.value || '').trim();
+          const menu  = (document.getElementById(`ei_menu_${id}`)?.value  || '').trim();
+          const errEl = document.getElementById(`ei_err_${id}`);
+          if (!name) { if(errEl) errEl.textContent = '식당명을 입력해주세요'; return; }
+          const dbKey = type === 'fav' ? 'jst_favorites' : 'jst_recommend';
+          const d = getRestData(type);
+          try {
+            const updated = { ...(d[id]||{}), name, phone: phone||'', menu: menu||'' };
+            await set(ref(db, `${dbKey}/${id}`), updated);
+            d[id] = updated;
+            showToast(`"${name}" 수정 완료 ✓`, 'success');
+            renderRestList(type);
+          } catch(e) { if(errEl) errEl.textContent = '저장 실패: '+e.message; }
+        }
+      };
       actions.appendChild(editBtn);
 
-      // 삭제 버튼
       const delBtn = document.createElement('button');
       delBtn.className = 'rest-card-del';
       delBtn.textContent = '삭제';
@@ -3021,48 +3054,6 @@
 
       card.appendChild(actions);
       wrap.appendChild(card);
-
-      // ── 수정 폼 ──
-      const editForm = document.createElement('div');
-      editForm.className = 'rest-edit-form';
-      editForm.id = `editForm_${id}`;
-
-      const nameInp = document.createElement('input');
-      nameInp.type = 'text'; nameInp.className = 'rest-edit-inp';
-      nameInp.id = `editName_${id}`; nameInp.placeholder = '식당명 *';
-      nameInp.maxLength = 20; nameInp.value = rest.name || '';
-
-      const row2 = document.createElement('div');
-      row2.style.cssText = 'display:flex;gap:5px;';
-      const phoneInp = document.createElement('input');
-      phoneInp.type = 'text'; phoneInp.className = 'rest-edit-inp';
-      phoneInp.id = `editPhone_${id}`; phoneInp.placeholder = '연락처';
-      phoneInp.maxLength = 14; phoneInp.value = rest.phone || '';
-      phoneInp.oninput = function(){ this.value = this.value.replace(/[^0-9-]/g,''); };
-      const menuInp = document.createElement('input');
-      menuInp.type = 'text'; menuInp.className = 'rest-edit-inp';
-      menuInp.id = `editMenu_${id}`; menuInp.placeholder = '주메뉴';
-      menuInp.maxLength = 30; menuInp.value = rest.menu || '';
-      row2.appendChild(phoneInp); row2.appendChild(menuInp);
-
-      const errDiv = document.createElement('div');
-      errDiv.className = 'rest-err'; errDiv.id = `editErr_${id}`;
-
-      const btns = document.createElement('div');
-      btns.className = 'rest-edit-btns';
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'rest-edit-save'; saveBtn.textContent = '저장';
-      saveBtn.addEventListener('click', () => saveRestEdit(type, id));
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'rest-edit-cancel'; cancelBtn.textContent = '취소';
-      cancelBtn.addEventListener('click', () => closeRestEditForm(id));
-      btns.appendChild(saveBtn); btns.appendChild(cancelBtn);
-
-      editForm.appendChild(nameInp);
-      editForm.appendChild(row2);
-      editForm.appendChild(errDiv);
-      editForm.appendChild(btns);
-      wrap.appendChild(editForm);
 
       el.appendChild(wrap);
     });
