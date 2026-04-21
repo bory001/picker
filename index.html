@@ -850,30 +850,17 @@
   }
 
 
-  /* 즐겨찾기 공유 복사 선택 모드 */
-  .fav-copy-select-mode .rest-card-wrap {
-    cursor: pointer;
-  }
-  .fav-copy-select-mode .rest-card-wrap .rest-card {
-    transition: background 0.1s;
-  }
-  .fav-copy-select-mode .rest-card-wrap:hover .rest-card { background: #f0f9ff; }
-  .rest-card-wrap.fav-selected { background: #eff6ff !important; }
-  .rest-card-wrap.fav-selected .rest-card { background: #eff6ff !important; border-color: #3b82f6 !important; }
+  /* 즐겨찾기 → 맛집공유 복사 선택 모드 */
+  .rest-card-wrap.fav-selected { outline: 2px solid #3b82f6; border-radius: 10px; }
+  .rest-card-wrap.fav-selected .rest-card { background: #eff6ff !important; }
   .fav-select-check {
-    width: 22px; height: 22px; border-radius: 50%; border: 2px solid #cbd5e1;
+    width: 26px; height: 52px; border-radius: 6px; border: 2px solid #cbd5e1;
     background: white; display: flex; align-items: center; justify-content: center;
-    font-size: 13px; flex-shrink: 0; transition: all 0.12s;
+    font-size: 15px; font-weight: 700; flex-shrink: 0; transition: all 0.12s;
   }
   .fav-selected .fav-select-check { background: #3b82f6; border-color: #3b82f6; color: white; }
-  .fav-copy-mode-bar {
-    display: none; background: #eff6ff; border: 1px solid #bfdbfe;
-    border-radius: 8px; padding: 7px 10px; margin-bottom: 6px;
-    font-size: 11px; font-weight: 700; color: #1d4ed8; align-items: center; gap: 8px;
-  }
-  .fav-copy-mode-bar.show { display: flex; }
 
-
+  /* ── 불참 ── */
   .absent-x {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
@@ -3110,7 +3097,7 @@
     btn.classList.add('active');
   };
 
-  // 즐겨찾기 → 공유 복사: 선택 모드 진입
+  // 즐겨찾기 → 맛집공유 복사: 선택 모드
   let _favCopyMode = false;
   let _favCopySelected = new Set();
 
@@ -3136,15 +3123,12 @@
   window.toggleFavCopySelect = function(id) {
     if (_favCopySelected.has(id)) _favCopySelected.delete(id);
     else _favCopySelected.add(id);
-    // 선택 상태 시각 갱신
     const wrap = document.getElementById(`favWrap_${id}`);
     if (wrap) {
-      if (_favCopySelected.has(id)) wrap.classList.add('fav-selected');
-      else wrap.classList.remove('fav-selected');
+      wrap.classList.toggle('fav-selected', _favCopySelected.has(id));
       const chk = wrap.querySelector('.fav-select-check');
       if (chk) chk.textContent = _favCopySelected.has(id) ? '✓' : '';
     }
-    // 버튼 텍스트 업데이트
     const execRow = document.getElementById('favCopyExecRow');
     if (execRow) {
       const btn = execRow.querySelector('button');
@@ -3165,7 +3149,7 @@
         count++;
         await new Promise(r => setTimeout(r, 30));
       }
-      showToast(`${count}개 항목을 공유 즐겨찾기로 복사했어요 ✓`, 'success');
+      showToast(`${count}개 항목을 맛집공유로 복사했어요 ✓`, 'success');
       cancelFavCopyMode();
     } catch(e) { showToast('복사 실패: '+e.message, 'error'); }
   };
@@ -3346,7 +3330,7 @@
         wrap.onclick = () => moveRecToFav(id);
       }
 
-      // fav 복사 선택 모드: 체크박스 + 클릭 선택
+      // fav 복사 선택 모드
       if (type === 'fav' && _favCopyMode) {
         wrap.id = `favWrap_${id}`;
         wrap.classList.add('rest-card-wrap');
@@ -3391,7 +3375,7 @@
         ${rest.phone ? `<div class="rest-card-sub" style="color:#1565c0;">📞 ${rest.phone}</div>` : ''}`;
       card.appendChild(info);
 
-      // ── 우측: + / 📞 / 수정 / 삭제 (복사 선택 모드엔 체크만) ──
+      // ── 우측 액션 영역 ──
       const actions = document.createElement('div');
       actions.className = 'rest-card-actions';
 
@@ -3402,6 +3386,7 @@
         chk.textContent = _favCopySelected.has(id) ? '✓' : '';
         actions.appendChild(chk);
       } else {
+
       // 📞 전화버튼 (세로 전체 높이)
       const callBtn = document.createElement('button');
       callBtn.className = 'rest-card-call';
@@ -3470,18 +3455,11 @@
           } catch(e) { if(errEl) errEl.textContent = '저장 실패: '+e.message; }
         }
       };
-      actions.appendChild(editBtn);
-
       const delBtn = document.createElement('button');
       delBtn.className = 'rest-card-del';
       delBtn.textContent = '삭제';
       delBtn.onclick = () => deleteRest(type, id);
       col.appendChild(editBtn);
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'rest-card-del';
-      delBtn.textContent = '삭제';
-      delBtn.onclick = () => deleteRest(type, id);
       col.appendChild(delBtn);
       actions.appendChild(col);
 
