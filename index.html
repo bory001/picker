@@ -265,7 +265,7 @@
   }
   .att-name-chip {
     background: var(--bg); border: 1px solid var(--border);
-    border-radius: 4px; padding: 0px 3px;
+    border-radius: 4px; padding: 2px 3px;
     font-size: 11px; font-weight: 600; color: var(--text);
     text-align: center; cursor: pointer; user-select: none;
     transition: all 0.12s; white-space: nowrap; display: inline-block;
@@ -391,13 +391,13 @@
     border-radius: 0 0 12px 12px;
   }
   @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-  .mdp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+  .mdp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
   .mdp-date { font-size: 15px; font-weight: 700; color: var(--primary); }
   .mdp-att-count {
     font-size: 12px; background: var(--accent-light); color: #065f46;
     border-radius: 20px; padding: 3px 10px; font-weight: 700;
   }
-  .mdp-att-grid { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 0.4rem; }
+  .mdp-att-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
   .mdp-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 0.75rem 0 1rem; }
   .mdp-attend-btn {
     width: 100%; padding: 12px; border: none; border-radius: 10px;
@@ -743,7 +743,7 @@
   .rest-card-call {
     font-size: 14px; font-weight: 700; color: #1565c0;
     background: #e3f2fd; border: none; border-radius: 6px;
-    width: 28px; height: 26px; cursor: pointer; white-space: nowrap;
+    width: 44px; height: 26px; cursor: pointer; white-space: nowrap;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .rest-card-call:active { background: #bbdefb; }
@@ -1429,7 +1429,7 @@
     <div class="rest-modal-title">
       <span>⭐ 즐겨찾기</span>
       <div style="display:flex;gap:5px;">
-        <button class="mdp-admin-btn" onclick="copyFavToShared()" style="background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.6);color:#b45309;">🌐 전체공유로 복사</button>
+        <button class="mdp-admin-btn" onclick="copyFavToShared()" style="background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.6);color:#b45309;">🌐 맛집공유로 복사</button>
         <button class="mdp-admin-btn green" id="favAddToggleBtn" onclick="toggleRestForm('fav',true)">➕ 추가</button>
       </div>
     </div>
@@ -1468,7 +1468,7 @@
       </div>
     </div>
     <div id="favCopyExecRow" style="display:none;gap:6px;margin-bottom:6px;">
-      <button onclick="execFavCopyToShared()" style="flex:1;padding:8px 10px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">🌐 선택항목 전체공유로 복사</button>
+      <button onclick="execFavCopyToShared()" style="flex:1;padding:8px 10px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">🌐 선택항목 맛집공유로 복사</button>
       <button onclick="cancelFavCopyMode()" style="padding:8px 16px;background:white;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#64748b;">취소</button>
     </div>
     <div class="rest-list" id="favList"><div class="rest-empty">등록된 항목이 없어요</div></div>
@@ -1606,6 +1606,7 @@
   let _absentData = {};  // { 'YYYY-MM-DD': { name: { reason } } }
   let _absentReason = '';
   let _adminSelectedName = null;
+  let _adminSelectedAbsent = false; // 선택된 이름이 불참자인지 여부
   let _manualOpen = false;
   let _pcManualOpen = false;
   let attPage = 0;
@@ -1964,8 +1965,8 @@
         const reason = val.reason || '';
         const isMineA = (name === currentUser);
         html += `<div class="att-row-item">
-          <div class="absent-chip-wrap">
-            <div class="att-name-chip${isMineA ? ' mine' : ''}" data-name="${name}">${name}</div>
+          <div class="absent-chip-wrap" data-absent-name="${name}" style="${isAdminMode ? 'cursor:pointer;' : ''}">
+            <div class="att-name-chip${isMineA ? ' mine' : ''}" data-name="${name}" data-absent-chip="1">${name}</div>
             <div class="absent-x">✕</div>
           </div>
           ${reason ? `<div class="absent-reason-chip">${reason}</div>` : ''}
@@ -1977,8 +1978,17 @@
     attList.innerHTML = html;
 
     attList.querySelectorAll('.att-name-chip, .att-name-chip-wrap').forEach(el => {
+      if (el.dataset.absentChip === '1') return; // 불참 칩은 아래서 별도 처리
       el.addEventListener('click', () => handleChipTap(el.dataset.name, el));
     });
+    // PC 불참 칩 클릭 (관리자 모드)
+    if (isAdminMode) {
+      attList.querySelectorAll('.absent-chip-wrap[data-absent-name]').forEach(wrap => {
+        const name = wrap.dataset.absentName;
+        const chip = wrap.querySelector('.att-name-chip');
+        wrap.addEventListener('click', () => handleAbsentChipTap(name, chip));
+      });
+    }
   }
 
   window.changeAttPage = function(dir) {
@@ -2145,7 +2155,10 @@
         // 이름 칩 + 빨간 X 오버레이
         const nameWrap = document.createElement('div');
         nameWrap.className = 'absent-chip-wrap';
-        if (isMine) {
+        if (isAdminMode) {
+          nameWrap.title = '클릭하여 불참 해제 (관리자)';
+          nameWrap.addEventListener('click', () => handleAbsentChipTap(name, nameChip));
+        } else if (isMine) {
           nameWrap.title = '클릭하여 불참 취소';
           nameWrap.addEventListener('click', () => cancelAbsent());
         }
@@ -2183,8 +2196,10 @@
       document.querySelectorAll('.att-name-chip').forEach(c => c.style.outline = '');
       if (_adminSelectedName === name) {
         _adminSelectedName = null;
+        _adminSelectedAbsent = false;
       } else {
         _adminSelectedName = name;
+        _adminSelectedAbsent = false; // 참석자 칩은 false
         const el = chipEl || document.querySelector(`.att-name-chip[data-name="${name}"]`);
         if (el) el.style.outline = '2px solid #ef4444';
       }
@@ -2205,6 +2220,22 @@
     } else {
       showToast(`"${name}" 님의 연락처가 없어요`, '');
     }
+  }
+
+  // ── 불참자 칩 탭 핸들러 (관리자 전용) ──
+  function handleAbsentChipTap(name, chipEl) {
+    if (!isAdminMode) return;
+    document.querySelectorAll('.att-name-chip').forEach(c => c.style.outline = '');
+    if (_adminSelectedName === name) {
+      _adminSelectedName = null;
+      _adminSelectedAbsent = false;
+    } else {
+      _adminSelectedName = name;
+      _adminSelectedAbsent = true;
+      if (chipEl) chipEl.style.outline = '2px solid #ef4444';
+    }
+    const hb = document.getElementById('hdrAttendBtn');
+    if (hb) hb.innerHTML = _adminSelectedName ? `✕ ${_adminSelectedName} 불참해제` : '❌ 참석 취소';
   }
 
   window.closeContactPopup = function(e) {
@@ -2253,8 +2284,23 @@
   window.toggleAttendanceMobile = async function() {
     if (!selectedDate) return;
     if (isAdminMode && _adminSelectedName) {
-      await removeAttendance(selectedDate, _adminSelectedName);
-      _adminSelectedName = null;
+      if (_adminSelectedAbsent) {
+        // 불참자 해제
+        const nameToRemove = _adminSelectedName;
+        _adminSelectedName = null;
+        _adminSelectedAbsent = false;
+        setLoading(true);
+        try {
+          await remove(ref(db, `${dbPrefix()}absent/${selectedDate}/${nameToRemove}`));
+          if (_absentData[selectedDate]) delete _absentData[selectedDate][nameToRemove];
+          showToast(`"${nameToRemove}" 님의 불참이 해제되었습니다`, 'success');
+        } catch(e) { showToast('해제 실패: '+e.message,'error'); }
+        finally { setLoading(false); }
+      } else {
+        await removeAttendance(selectedDate, _adminSelectedName);
+        _adminSelectedName = null;
+        _adminSelectedAbsent = false;
+      }
       return;
     }
     if (!canEditAttendance(selectedDate)) {
@@ -2637,6 +2683,7 @@
     if (isAdminMode) {
       isAdminMode = false;
       _adminSelectedName = null;
+      _adminSelectedAbsent = false;
       document.querySelectorAll('.att-name-chip').forEach(c => c.style.outline = '');
       const btn = document.getElementById('adminModeBtn');
       if (btn) { btn.innerHTML = '⚙️ 관리자'; btn.style.background='rgba(255,165,0,0.2)'; btn.style.borderColor='rgba(255,165,0,0.5)'; }
@@ -3148,7 +3195,7 @@
     const execRow = document.getElementById('favCopyExecRow');
     if (execRow) {
       const btn = execRow.querySelector('button');
-      if (btn) btn.textContent = `🌐 선택항목 전체공유로 복사 (${_favCopySelected.size}개)`;
+      if (btn) btn.textContent = `🌐 선택항목 맛집공유로 복사 (${_favCopySelected.size}개)`;
     }
   };
 
