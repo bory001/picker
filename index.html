@@ -2951,6 +2951,11 @@
     const monthSel = document.getElementById('finSelMonth');
     yearSel.style.display = (period === 'year' || period === 'month') ? '' : 'none';
     monthSel.style.display = period === 'month' ? '' : 'none';
+    if (period === 'month') {
+      const now = new Date();
+      yearSel.value = now.getFullYear();
+      monthSel.value = now.getMonth() + 1;
+    }
     renderFinanceTable();
   };
 
