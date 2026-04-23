@@ -149,7 +149,7 @@
   .header-row2 { display: flex; align-items: center; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
   .header-left h1 { font-size: 15px; font-weight: 700; white-space: nowrap; }
   .header-left .subtitle { font-size: 11px; opacity: 0.7; white-space: nowrap; padding-left: 18px; }
-  .header-left { flex-shrink: 1; min-width: 0; overflow: hidden; }
+  .header-left { flex-shrink: 1; min-width: 0; overflow: visible; }
   .header-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
   .user-badge {
     display: flex; align-items: center; gap: 5px;
@@ -415,42 +415,42 @@
   .finance-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55);
     display: none; align-items: flex-start; justify-content: center;
-    z-index: 650; padding: 0.5rem; overflow-y: auto;
+    z-index: 650; padding: 0.4rem; overflow-y: auto;
   }
   .finance-overlay.show { display: flex; }
   .finance-box {
-    background: white; border-radius: 16px; padding: 1.2rem 1rem 1rem;
+    background: white; border-radius: 16px; padding: 0.9rem 0.75rem 0.75rem;
     width: 100%; max-width: 520px; margin: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   }
   .finance-title {
-    font-size: 16px; font-weight: 800; color: var(--primary);
+    font-size: 14px; font-weight: 800; color: var(--primary);
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
   }
   .finance-summary {
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
-    margin-bottom: 0.75rem;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;
+    margin-bottom: 0.5rem;
   }
   .finance-sum-box {
-    border-radius: 10px; padding: 8px 10px; text-align: center;
+    border-radius: 8px; padding: 6px 4px; text-align: center;
     border: 1px solid var(--border);
   }
   .finance-sum-box.income { background: #f0fdf4; border-color: #86efac; }
   .finance-sum-box.expense { background: #fef2f2; border-color: #fca5a5; }
   .finance-sum-box.balance { background: #eff6ff; border-color: #93c5fd; }
-  .finance-sum-label { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 3px; }
-  .finance-sum-amount { font-size: 15px; font-weight: 800; }
+  .finance-sum-label { font-size: 9px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px; }
+  .finance-sum-amount { font-size: 11px; font-weight: 800; word-break: break-all; line-height: 1.3; }
   .finance-sum-box.income .finance-sum-amount { color: #16a34a; }
   .finance-sum-box.expense .finance-sum-amount { color: #dc2626; }
   .finance-sum-box.balance .finance-sum-amount { color: #1d4ed8; }
-  .finance-table-wrap { max-height: 55vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.75rem; }
-  .finance-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .finance-table-wrap { max-height: 50vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem; }
+  .finance-table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
   .finance-table th {
-    background: var(--primary); color: white; padding: 7px 8px;
-    text-align: center; font-size: 11px; font-weight: 700; position: sticky; top: 0; z-index: 1;
+    background: var(--primary); color: white; padding: 5px 4px;
+    text-align: center; font-size: 10px; font-weight: 700; position: sticky; top: 0; z-index: 1; white-space: nowrap;
   }
-  .finance-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
+  .finance-table td { padding: 5px 4px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; font-size: 11px; word-break: break-all; }
   .finance-table tr:last-child td { border-bottom: none; }
   .finance-table tr:nth-child(even) td { background: #f8fafc; }
   .finance-income-badge { color: #16a34a; font-weight: 700; }
@@ -459,10 +459,10 @@
   .finance-balance-minus { color: #dc2626; font-weight: 700; }
   .finance-del-btn {
     background: none; border: none; color: #dc2626; font-size: 13px;
-    cursor: pointer; padding: 2px 5px; border-radius: 4px;
+    cursor: pointer; padding: 2px 4px; border-radius: 4px;
   }
   .finance-del-btn:hover { background: #fef2f2; }
-  .finance-empty { text-align: center; color: var(--text-muted); padding: 2rem; font-size: 13px; }
+  .finance-empty { text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 12px; }
   /* 수입/지출 입력 팝업 */
   .finance-input-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.45);
@@ -475,7 +475,7 @@
     width: 100%; max-width: 480px; padding: 1.2rem 1rem 1.5rem;
     animation: slideUpSheet 0.22s ease;
   }
-  .finance-input-title { font-size: 15px; font-weight: 800; color: var(--primary); text-align: center; margin-bottom: 1rem; }
+  .finance-input-title { font-size: 14px; font-weight: 800; color: var(--primary); text-align: center; margin-bottom: 0.75rem; }
   .finance-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0.75rem; }
   .finance-type-btn {
     padding: 10px; border-radius: 10px; border: 2px solid var(--border);
@@ -486,16 +486,10 @@
   .finance-type-btn.expense.active { background: #fef2f2; border-color: #dc2626; color: #dc2626; }
   .finance-amount-input {
     width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
-    border-radius: 10px; font-size: 16px; font-family: inherit; outline: none;
-    margin-bottom: 8px; text-align: right;
+    border-radius: 10px; font-size: 18px; font-family: inherit; outline: none;
+    margin-bottom: 0.75rem; text-align: right; font-weight: 700;
   }
   .finance-amount-input:focus { border-color: var(--primary); }
-  .finance-memo-input {
-    width: 100%; padding: 8px 12px; border: 1.5px solid var(--border);
-    border-radius: 10px; font-size: 13px; font-family: inherit; outline: none;
-    margin-bottom: 0.75rem;
-  }
-  .finance-memo-input:focus { border-color: var(--primary); }
   .finance-input-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .finance-save-btn {
     padding: 12px; background: var(--primary); color: white; border: none;
@@ -505,10 +499,10 @@
     padding: 12px; background: var(--bg); border: 1px solid var(--border);
     border-radius: 12px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; color: var(--text-muted);
   }
-  /* 잔액 표시 (헤더 좌측) */
+  /* 잔액 표시 (헤더 좌측 - 별도 줄) */
   .header-balance {
     font-size: 11px; font-weight: 700; color: #93c5fd;
-    padding-left: 18px; white-space: nowrap;
+    padding-left: 2px; white-space: nowrap; margin-top: 1px;
   }
 
   /* ── 토스트 ── */
@@ -2893,7 +2887,6 @@
       return `<tr>
         <td>${dateStr}</td>
         <td>${typeLabel}</td>
-        <td style="text-align:left;">${e.memo || ''}</td>
         <td>${amtStr}</td>
         <td>${balStr}</td>
         <td>${canDel ? `<button class="finance-del-btn" onclick="deleteFinance('${e.date}','${e.id}')">✕</button>` : ''}</td>
@@ -2917,7 +2910,6 @@
     _finSelectedType = 'income';
     document.getElementById('finInputTitle').textContent = `💰 ${dateKey} 수입 / 지출 입력`;
     document.getElementById('finAmount').value = '';
-    document.getElementById('finMemo').value = '';
     document.getElementById('finTypeIncome').classList.add('active');
     document.getElementById('finTypeExpense').classList.remove('active');
     document.getElementById('financeInputSheet').classList.add('show');
@@ -2929,6 +2921,11 @@
     if (e.target === this) closeFinanceInput();
   });
 
+  window.formatFinAmountInput = function(el) {
+    const raw = el.value.replace(/[^0-9]/g, '');
+    el.value = raw ? Number(raw).toLocaleString('ko-KR') : '';
+  };
+
   window.selectFinType = function(type) {
     _finSelectedType = type;
     document.getElementById('finTypeIncome').classList.toggle('active', type === 'income');
@@ -2936,11 +2933,11 @@
   };
 
   window.saveFinance = async function() {
-    const amount = parseInt(document.getElementById('finAmount').value);
+    const rawStr = document.getElementById('finAmount').value.replace(/[^0-9]/g, '');
+    const amount = parseInt(rawStr);
     if (!amount || amount <= 0) { showToast('금액을 입력해주세요', 'error'); return; }
-    const memo = document.getElementById('finMemo').value.trim();
     const id = 'f' + Date.now();
-    const entry = { type: _finSelectedType, amount, memo, createdAt: Date.now() };
+    const entry = { type: _finSelectedType, amount, createdAt: Date.now() };
     try {
       await set(ref(db, `${dbPrefix()}finance/${_finInputDate}/${id}`), entry);
       closeFinanceInput();
@@ -3840,12 +3837,11 @@
     <div class="finance-table-wrap">
       <table class="finance-table">
         <thead><tr>
-          <th style="width:80px;">날짜</th>
-          <th style="width:44px;">구분</th>
-          <th>메모</th>
+          <th style="width:72px;">날짜</th>
+          <th style="width:36px;">구분</th>
           <th style="width:80px;">금액</th>
-          <th style="width:70px;">잔액</th>
-          <th style="width:32px;"></th>
+          <th style="width:80px;">잔액</th>
+          <th style="width:28px;"></th>
         </tr></thead>
         <tbody id="finTableBody"></tbody>
       </table>
@@ -3862,8 +3858,7 @@
       <button class="finance-type-btn income active" id="finTypeIncome" onclick="selectFinType('income')">💚 수입</button>
       <button class="finance-type-btn expense" id="finTypeExpense" onclick="selectFinType('expense')">❤️ 지출</button>
     </div>
-    <input type="number" class="finance-amount-input" id="finAmount" placeholder="금액 입력" min="0">
-    <input type="text" class="finance-memo-input" id="finMemo" placeholder="메모 (선택)">
+    <input type="text" inputmode="numeric" class="finance-amount-input" id="finAmount" placeholder="0" oninput="formatFinAmountInput(this)">
     <div class="finance-input-btns">
       <button class="finance-cancel-btn" onclick="closeFinanceInput()">취소</button>
       <button class="finance-save-btn" onclick="saveFinance()">저장</button>
