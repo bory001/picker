@@ -1450,6 +1450,7 @@
     <div class="rest-modal-title">
       <span>🌐 맛집(전체공유)</span>
       <div style="display:flex;align-items:center;gap:5px;">
+        <button class="mdp-admin-btn" onclick="copySharedToFav()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.5);color:#b91c1c;">⭐ 즐겨찾기로 복사</button>
         <button class="mdp-admin-btn green" id="sharedFavAddToggleBtn" onclick="toggleRestForm('shared',true)">➕ 추가</button>
         <button onclick="closeSharedFavModal()" style="background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1;padding:0 2px;">✕</button>
       </div>
@@ -1488,6 +1489,10 @@
       </div>
     </div>
     <div class="rest-list" id="sharedFavList"><div class="rest-empty">등록된 항목이 없어요</div></div>
+    <div id="sharedCopyExecRow" style="display:none;gap:6px;margin-bottom:6px;">
+      <button onclick="execSharedCopyToFav()" style="flex:1;padding:8px 10px;background:#ef4444;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">⭐ 선택항목 즐겨찾기로 복사</button>
+      <button onclick="cancelSharedCopyMode()" style="padding:8px 16px;background:white;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#64748b;">취소</button>
+    </div>
     <button class="mdb-close-btn" onclick="closeSharedFavModal()" style="margin-top:0.6rem;">닫기</button>
   </div>
 </div>
@@ -3286,6 +3291,7 @@
 
   window.closeSharedFavModal = function() {
     document.getElementById('sharedFavModal').classList.remove('show');
+    if (_sharedCopyMode) cancelSharedCopyMode();
   };
 
   window.setSharedFavType = function(type, btn) {
@@ -3373,6 +3379,65 @@
       }
       showToast(`${count}개 항목을 공유 즐겨찾기로 복사했어요 ✓`, 'success');
       cancelFavCopyMode();
+    } catch(e) { showToast('복사 실패: '+e.message, 'error'); }
+  };
+
+  // ── 맛집(전체공유) → 즐겨찾기 복사 ──
+  let _sharedCopyMode = false;
+  let _sharedCopySelected = new Set();
+
+  window.copySharedToFav = function() {
+    _sharedCopyMode = true;
+    _sharedCopySelected = new Set();
+    toggleRestForm('shared', false);
+    const execRow = document.getElementById('sharedCopyExecRow');
+    if (execRow) execRow.style.display = 'flex';
+    document.getElementById('sharedFavAddToggleBtn').style.display = 'none';
+    renderRestList('shared');
+  };
+
+  window.cancelSharedCopyMode = function() {
+    _sharedCopyMode = false;
+    _sharedCopySelected = new Set();
+    const execRow = document.getElementById('sharedCopyExecRow');
+    if (execRow) execRow.style.display = 'none';
+    document.getElementById('sharedFavAddToggleBtn').style.display = '';
+    renderRestList('shared');
+  };
+
+  window.toggleSharedCopySelect = function(id) {
+    if (_sharedCopySelected.has(id)) _sharedCopySelected.delete(id);
+    else _sharedCopySelected.add(id);
+    const wrap = document.getElementById(`sharedWrap_${id}`);
+    if (wrap) {
+      if (_sharedCopySelected.has(id)) wrap.classList.add('fav-selected');
+      else wrap.classList.remove('fav-selected');
+      const chk = wrap.querySelector('.fav-select-check');
+      if (chk) chk.textContent = _sharedCopySelected.has(id) ? '✓' : '';
+    }
+    const execRow = document.getElementById('sharedCopyExecRow');
+    if (execRow) {
+      const btn = execRow.querySelector('button');
+      if (btn) btn.textContent = `⭐ 선택항목 즐겨찾기로 복사 (${_sharedCopySelected.size}개)`;
+    }
+  };
+
+  window.execSharedCopyToFav = async function() {
+    if (_sharedCopySelected.size === 0) { showToast('복사할 항목을 선택해주세요', ''); return; }
+    await loadRestData('fav');
+    let count = 0;
+    try {
+      for (const id of _sharedCopySelected) {
+        const rest = sharedFavData[id];
+        if (!rest) continue;
+        const newId = 'fav_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+        await set(ref(db, `${dbPrefix()}favorites/${newId}`), { ...rest });
+        favData[newId] = { ...rest };
+        count++;
+        await new Promise(r => setTimeout(r, 30));
+      }
+      showToast(`${count}개 항목을 즐겨찾기로 복사했어요 ✓`, 'success');
+      cancelSharedCopyMode();
     } catch(e) { showToast('복사 실패: '+e.message, 'error'); }
   };
 
@@ -3561,6 +3626,15 @@
         wrap.onclick = () => toggleFavCopySelect(id);
       }
 
+      // shared → fav 복사 선택 모드
+      if (type === 'shared' && _sharedCopyMode) {
+        wrap.id = `sharedWrap_${id}`;
+        wrap.classList.add('rest-card-wrap');
+        if (_sharedCopySelected.has(id)) wrap.classList.add('fav-selected');
+        wrap.style.cursor = 'pointer';
+        wrap.onclick = () => toggleSharedCopySelect(id);
+      }
+
       // ── 메인 행 ──
       const card = document.createElement('div');
       card.className = 'rest-card';
@@ -3606,6 +3680,12 @@
         const chk = document.createElement('div');
         chk.className = 'fav-select-check';
         chk.textContent = _favCopySelected.has(id) ? '✓' : '';
+        actions.appendChild(chk);
+      } else if (type === 'shared' && _sharedCopyMode) {
+        // shared → fav 복사 선택 모드
+        const chk = document.createElement('div');
+        chk.className = 'fav-select-check';
+        chk.textContent = _sharedCopySelected.has(id) ? '✓' : '';
         actions.appendChild(chk);
       } else {
       // 1행: + (사진추가) / 📞 (전화)
