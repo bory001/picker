@@ -1599,6 +1599,8 @@
   let selectedDate = null;
   let currentPassword = '7777';
   const ADMIN_PW = '6986';
+  const ADMIN_PW2 = '7890';
+  const isAdminPw = (v) => v === ADMIN_PW || v === ADMIN_PW2;
   let _lockBuf = '';
   let isAdminMode = false;
   let scheduleData = {};  // { 'YYYY-MM-DD': { title, emoji, time, place, amount } }
@@ -1607,6 +1609,7 @@
   let _absentReason = '';
   let _adminSelectedName = null;
   let _adminSelectedAbsent = false; // 선택된 이름이 불참자인지 여부
+  let _adminEnteredPw = '';         // 관리자 진입 시 사용한 비번
   let _manualOpen = false;
   let _pcManualOpen = false;
   let attPage = 0;
@@ -1728,7 +1731,7 @@
       nameInp.focus();
       _lockBuf = ''; updateDots(); return;
     }
-    const _isAdmin = (_lockBuf === ADMIN_PW);
+    const _isAdmin = isAdminPw(_lockBuf);
     if (_lockBuf === currentPassword || _isAdmin) {
       localStorage.setItem(LOCAL_KEY, name);
       localStorage.setItem(LOCAL_TEAM_KEY, team);
@@ -2684,6 +2687,7 @@
       isAdminMode = false;
       _adminSelectedName = null;
       _adminSelectedAbsent = false;
+      _adminEnteredPw = '';
       document.querySelectorAll('.att-name-chip').forEach(c => c.style.outline = '');
       const btn = document.getElementById('adminModeBtn');
       if (btn) { btn.innerHTML = '⚙️ 관리자'; btn.style.background='rgba(255,165,0,0.2)'; btn.style.borderColor='rgba(255,165,0,0.5)'; }
@@ -2714,8 +2718,9 @@
     document.getElementById('adminAuthErr').textContent = '';
     if (_adminBuf.length === 4) {
       setTimeout(() => {
-        if (_adminBuf === ADMIN_PW) {
+        if (isAdminPw(_adminBuf)) {
           isAdminMode = true;
+          _adminEnteredPw = _adminBuf;
           closeAdminAuth();
           const btn = document.getElementById('adminModeBtn');
           if (btn) { btn.innerHTML='⚙️ 관리중'; btn.style.background='rgba(255,100,0,0.4)'; btn.style.borderColor='rgba(255,100,0,0.8)'; }
@@ -2734,28 +2739,30 @@
 
   window.adminKeyDel = function() { if(_adminBuf.length){_adminBuf=_adminBuf.slice(0,-1);updateAdminDots();} };
 
-  // ── 비밀번호 변경 ──
+  // ── 비밀번호 변경 (관리자 전용) ──
   window.openPwModal = function() {
-    ['pwCurrent','pwNew','pwConfirm'].forEach(id => document.getElementById(id).value='');
+    if (!isAdminMode || _adminEnteredPw !== ADMIN_PW) {
+      showToast('비밀번호 변경은 관리자(6986)만 가능합니다', 'error');
+      return;
+    }
+    ['pwNew','pwConfirm'].forEach(id => document.getElementById(id).value='');
     document.getElementById('pwError').textContent = '';
     document.getElementById('pwModal').classList.add('show');
   };
   window.closePwModal = function() { document.getElementById('pwModal').classList.remove('show'); };
   window.changePassword = async function() {
-    const cur = document.getElementById('pwCurrent').value;
     const nw  = document.getElementById('pwNew').value;
     const cf  = document.getElementById('pwConfirm').value;
     const errEl = document.getElementById('pwError');
     errEl.textContent = '';
-    if (cur !== currentPassword && cur !== ADMIN_PW) { errEl.textContent='현재 비밀번호가 틀렸어요'; return; }
     if (!nw) { errEl.textContent='새 비밀번호를 입력해주세요'; return; }
-    if (nw === ADMIN_PW) { errEl.textContent='해당 번호는 사용할 수 없어요'; return; }
+    if (isAdminPw(nw)) { errEl.textContent='해당 번호는 사용할 수 없어요'; return; }
     if (nw !== cf) { errEl.textContent='새 비밀번호가 일치하지 않아요'; return; }
     try {
       await set(ref(db,`${dbPrefix()}config/password`), nw);
       currentPassword = nw;
       closePwModal();
-      showToast('비밀번호가 변경되었어요! ✓','success');
+      showToast('사용자 비밀번호가 변경되었어요! ✓','success');
     } catch(e) { errEl.textContent='저장 실패: '+e.message; }
   };
 
@@ -3732,9 +3739,7 @@
 <!-- 비밀번호 변경 모달 -->
 <div class="modal-overlay" id="pwModal">
   <div class="modal-box">
-    <div class="modal-title">🔑 비밀번호 변경</div>
-    <label class="modal-label">현재 비밀번호</label>
-    <input type="password" class="modal-input" id="pwCurrent" placeholder="현재 비밀번호">
+    <div class="modal-title">🔑 사용자 비밀번호 변경 (관리자 전용)</div>
     <label class="modal-label">새 비밀번호</label>
     <input type="password" class="modal-input" id="pwNew" placeholder="새 비밀번호">
     <label class="modal-label">새 비밀번호 확인</label>
