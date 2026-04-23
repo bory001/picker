@@ -2043,34 +2043,27 @@
     attGrid.innerHTML = '';
     attGrid.style.cssText = 'width:100%;';
 
-    // 2열 좌우 배치 (등록순)
-    const rowList = document.createElement('div');
-    rowList.className = 'att-row-list';
-    // 가운데 세로 구분선 (grid 2번째 열)
-    const divider = document.createElement('div');
-    divider.className = 'att-row-list-divider';
+    // ── 왼쪽: 참석자 / 오른쪽: 불참자 ──
+    const twoColWrap = document.createElement('div');
+    twoColWrap.style.cssText = 'display:grid;grid-template-columns:1fr 1px 1fr;width:100%;border-top:1px solid #e8edf4;';
 
+    // 왼쪽 참석자 컬럼
     const leftCol = document.createElement('div');
     leftCol.style.cssText = 'display:flex;flex-direction:column;';
-    const rightCol = document.createElement('div');
-    rightCol.style.cssText = 'display:flex;flex-direction:column;';
-
-    sorted.forEach(([name, val], idx) => {
+    sorted.forEach(([name, val]) => {
       const isMine = (name === currentUser);
       const arrTime = val.arrivalTime || '';
       const menu = val.menu || '';
 
       const row = document.createElement('div');
-      row.className = 'att-row-item';
+      row.style.cssText = 'display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:2px 6px;';
 
-      // 이름 칩
       const nameChip = document.createElement('div');
       nameChip.className = 'att-name-chip ' + (isMine ? 'mine' : '');
       nameChip.dataset.name = name;
       nameChip.textContent = name;
       row.appendChild(nameChip);
 
-      // 시각 칩
       if (arrTime) {
         const tc = document.createElement('div');
         tc.className = 'att-time-chip';
@@ -2078,15 +2071,12 @@
         tc.textContent = arrTime;
         row.appendChild(tc);
       }
-
-      // 메뉴 칩
       if (menu) {
         const mc = document.createElement('div');
         mc.className = 'att-menu-chip';
         mc.textContent = menu;
         if (isMine) {
           mc.style.cursor = 'pointer';
-          mc.title = '클릭해서 수정';
           mc.addEventListener('click', e => { e.stopPropagation(); openMenuModal(name); });
         }
         row.appendChild(mc);
@@ -2098,81 +2088,63 @@
         row.appendChild(addBtn);
       }
 
-      // 이름칩 클릭 - 연락처 기능 제거, 롱프레스만 유지
       setupLongPress(nameChip, () => {
         const dt = val.registeredAt ? new Date(val.registeredAt) : null;
         const msg = dt ? `등록: ${dt.getMonth()+1}.${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '등록일시 없음';
         showDateTooltip(nameChip, msg);
       });
-      // 관리자 모드 클릭 선택
-      if (isAdminMode) {
-        nameChip.addEventListener('click', () => handleChipTap(name, nameChip));
-      }
+      if (isAdminMode) nameChip.addEventListener('click', () => handleChipTap(name, nameChip));
 
-      if (idx % 2 === 0) leftCol.appendChild(row);
-      else rightCol.appendChild(row);
+      leftCol.appendChild(row);
     });
 
-    rowList.appendChild(leftCol);
-    rowList.appendChild(divider);
-    rowList.appendChild(rightCol);
-    attGrid.appendChild(rowList);
+    // 중앙 구분선
+    const divider = document.createElement('div');
+    divider.style.cssText = 'background:#e8edf4;width:1px;';
 
-    // ── 불참자 행 (2열) ──
+    // 오른쪽 불참자 컬럼
+    const rightCol = document.createElement('div');
+    rightCol.style.cssText = 'display:flex;flex-direction:column;';
     const absentEntries = Object.entries(_absentData[selectedDate] || {});
-    if (absentEntries.length > 0) {
-      const absentList = document.createElement('div');
-      absentList.className = 'att-row-list';
-      const absentDivider = document.createElement('div');
-      absentDivider.className = 'att-row-list-divider';
-      const absentLeft = document.createElement('div');
-      absentLeft.style.cssText = 'display:flex;flex-direction:column;';
-      const absentRight = document.createElement('div');
-      absentRight.style.cssText = 'display:flex;flex-direction:column;';
+    absentEntries.forEach(([name, val]) => {
+      const isMine = (name === currentUser);
+      const reason = val.reason || '';
 
-      absentEntries.forEach(([name, val], idx) => {
-        const isMine = (name === currentUser);
-        const reason = val.reason || '';
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:2px 6px;';
 
-        const row = document.createElement('div');
-        row.className = 'att-row-item';
+      const nameWrap = document.createElement('div');
+      nameWrap.className = 'absent-chip-wrap';
+      if (isAdminMode) {
+        nameWrap.title = '클릭하여 불참 해제 (관리자)';
+        nameWrap.addEventListener('click', () => handleAbsentChipTap(name, nameChip));
+      } else if (isMine) {
+        nameWrap.title = '클릭하여 불참 취소';
+        nameWrap.addEventListener('click', () => cancelAbsent());
+      }
+      const nameChip = document.createElement('div');
+      nameChip.className = 'att-name-chip' + (isMine ? ' mine' : '');
+      nameChip.dataset.name = name;
+      nameChip.textContent = name;
+      const xBadge = document.createElement('div');
+      xBadge.className = 'absent-x';
+      xBadge.textContent = '✕';
+      nameWrap.appendChild(nameChip);
+      nameWrap.appendChild(xBadge);
+      row.appendChild(nameWrap);
+      if (reason) {
+        const rc = document.createElement('div');
+        rc.className = 'absent-reason-chip';
+        rc.textContent = reason;
+        row.appendChild(rc);
+      }
+      rightCol.appendChild(row);
+    });
 
-        // 이름 칩 + 빨간 X 오버레이
-        const nameWrap = document.createElement('div');
-        nameWrap.className = 'absent-chip-wrap';
-        if (isAdminMode) {
-          nameWrap.title = '클릭하여 불참 해제 (관리자)';
-          nameWrap.addEventListener('click', () => handleAbsentChipTap(name, nameChip));
-        } else if (isMine) {
-          nameWrap.title = '클릭하여 불참 취소';
-          nameWrap.addEventListener('click', () => cancelAbsent());
-        }
-        const nameChip = document.createElement('div');
-        nameChip.className = 'att-name-chip' + (isMine ? ' mine' : '');
-        nameChip.dataset.name = name;
-        nameChip.textContent = name;
-        const xBadge = document.createElement('div');
-        xBadge.className = 'absent-x';
-        xBadge.textContent = '✕';
-        nameWrap.appendChild(nameChip);
-        nameWrap.appendChild(xBadge);
-        row.appendChild(nameWrap);
-
-        if (reason) {
-          const rc = document.createElement('div');
-          rc.className = 'absent-reason-chip';
-          rc.textContent = reason;
-          row.appendChild(rc);
-        }
-
-        if (idx % 2 === 0) absentLeft.appendChild(row);
-        else absentRight.appendChild(row);
-      });
-      absentList.appendChild(absentLeft);
-      absentList.appendChild(absentDivider);
-      absentList.appendChild(absentRight);
-      attGrid.appendChild(absentList);
-    }
+    twoColWrap.appendChild(leftCol);
+    twoColWrap.appendChild(divider);
+    twoColWrap.appendChild(rightCol);
+    attGrid.appendChild(twoColWrap);
   }
 
   // ── 칩 탭 핸들러 ──
