@@ -450,9 +450,9 @@
     background: var(--primary); color: white; padding: 5px 2px;
     text-align: center; font-size: 11px; font-weight: 700; position: sticky; top: 0; z-index: 1; white-space: nowrap;
   }
-  .finance-table th.num-col { text-align: right; padding-right: 4px; }
+  .finance-table th.num-col { text-align: center; padding: 5px 2px; }
   .finance-table td { padding: 5px 2px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .finance-table td.num-col { text-align: right; padding-right: 6px; }
+  .finance-table td.num-col { text-align: right; padding-right: 2px; padding-left: 0; }
   .finance-table tr:last-child td { border-bottom: none; }
   .finance-table tr:nth-child(even) td { background: #f8fafc; }
   .finance-income-badge { color: #16a34a; font-weight: 700; }
@@ -1110,7 +1110,7 @@
     <div class="login-hero-overlay"></div>
     <div class="login-hero-content">
       <div class="login-title-row">
-        <div class="login-icon" id="installIcon" onclick="triggerInstall()" title="앱 설치" style="cursor:pointer;">🍽️</div>
+        <div class="login-icon" id="installIcon" onclick="triggerInstall()" title="앱 설치" style="cursor:pointer;"><img src="logo.png" alt="로고" style="height:38px;width:auto;object-fit:contain;vertical-align:middle;"></div>
         <div class="login-title">BR 식사조사</div>
       </div>
       <div id="pwSubMsg" style="font-size:0.68rem;color:#ffffff;font-weight:700;letter-spacing:1px;min-height:16px;margin-bottom:4px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,0.8);"></div>
@@ -1164,7 +1164,7 @@
     <!-- 1행: 제목 + 기능 버튼 -->
     <div class="header-row1">
       <div class="header-left">
-        <h1>🍽️ BR 식사조사</h1>
+        <h1 style="display:flex;align-items:center;gap:6px;"><img src="logo.png" alt="로고" style="height:22px;width:auto;object-fit:contain;vertical-align:middle;"> BR 식사조사</h1>
         <div class="subtitle" id="headerSubtitle">(보령시청)</div>
       </div>
       <div class="header-right">
