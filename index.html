@@ -445,12 +445,12 @@
   .finance-sum-box.expense .finance-sum-amount { color: #dc2626; }
   .finance-sum-box.balance .finance-sum-amount { color: #1d4ed8; }
   .finance-table-wrap { max-height: 50vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem; }
-  .finance-table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+  .finance-table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: fixed; }
   .finance-table th {
-    background: var(--primary); color: white; padding: 5px 4px;
+    background: var(--primary); color: white; padding: 5px 2px;
     text-align: center; font-size: 10px; font-weight: 700; position: sticky; top: 0; z-index: 1; white-space: nowrap;
   }
-  .finance-table td { padding: 5px 4px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; font-size: 11px; word-break: break-all; }
+  .finance-table td { padding: 5px 2px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .finance-table tr:last-child td { border-bottom: none; }
   .finance-table tr:nth-child(even) td { background: #f8fafc; }
   .finance-income-badge { color: #16a34a; font-weight: 700; }
@@ -2935,7 +2935,7 @@
       return `<tr>
         <td style="white-space:nowrap;">${dateStr}</td>
         <td>${typeLabel}</td>
-        <td style="text-align:left;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${memo}</td>
+        <td>${memo}</td>
         <td>${amtStr}</td>
         <td>${balStr}</td>
         <td>${canDel ? `<button class="finance-del-btn" onclick="deleteFinance('${e.date}','${e.id}')">✕</button>` : ''}</td>
@@ -3920,12 +3920,12 @@
     <div class="finance-table-wrap">
       <table class="finance-table">
         <thead><tr>
-          <th style="width:58px;">날짜</th>
-          <th style="width:30px;">구분</th>
-          <th style="min-width:40px;">내용</th>
-          <th style="width:70px;">금액</th>
-          <th style="width:70px;">잔액</th>
-          <th style="width:24px;"></th>
+          <th style="width:36px;">날짜</th>
+          <th style="width:26px;">구분</th>
+          <th>내용</th>
+          <th style="width:62px;">금액</th>
+          <th style="width:62px;">잔액</th>
+          <th style="width:20px;"></th>
         </tr></thead>
         <tbody id="finTableBody"></tbody>
       </table>
