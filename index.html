@@ -1253,7 +1253,10 @@
 <!-- 통계 모달 -->
 <div class="ranking-modal-overlay" id="rankingModal">
   <div class="ranking-modal-box">
-    <div class="ranking-modal-title">🍽️ 식사 참석 통계</div>
+    <div class="ranking-modal-title">
+      🍽️ 식사 참석 통계
+      <button onclick="closeRankingModal()" style="margin-left:auto;background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1;padding:0 2px;">✕</button>
+    </div>
     <div class="ranking-period-tabs">
       <button class="rp-tab active" onclick="setRankPeriod('month',this)">📅 월간</button>
       <button class="rp-tab" onclick="setRankPeriod('quarter',this)">📆 분기</button>
@@ -1386,7 +1389,10 @@
   <div class="rest-modal-box">
     <div class="rest-modal-title">
       <span>🌐 맛집(전체공유)</span>
-      <button class="mdp-admin-btn green" id="sharedFavAddToggleBtn" onclick="toggleRestForm('shared',true)">➕ 추가</button>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <button class="mdp-admin-btn green" id="sharedFavAddToggleBtn" onclick="toggleRestForm('shared',true)">➕ 추가</button>
+        <button onclick="closeSharedFavModal()" style="background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1;padding:0 2px;">✕</button>
+      </div>
     </div>
     <!-- 식당 / 카페 대분류 탭 -->
     <div class="fav-type-tabs">
@@ -1431,9 +1437,10 @@
   <div class="rest-modal-box">
     <div class="rest-modal-title">
       <span>⭐ 즐겨찾기</span>
-      <div style="display:flex;gap:5px;">
+      <div style="display:flex;gap:5px;align-items:center;">
         <button class="mdp-admin-btn" onclick="copyFavToShared()" style="background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.6);color:#b45309;">🌐 맛집공유로 복사</button>
         <button class="mdp-admin-btn green" id="favAddToggleBtn" onclick="toggleRestForm('fav',true)">➕ 추가</button>
+        <button onclick="closeFavModal()" style="background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1;padding:0 2px;">✕</button>
       </div>
     </div>
     <!-- 식당 / 카페 대분류 탭 -->
@@ -1484,10 +1491,11 @@
   <div class="rest-modal-box">
     <div class="rest-modal-title">
       <span>🍴 식당 추천</span>
-      <div style="display:flex;gap:5px;">
+      <div style="display:flex;gap:5px;align-items:center;">
         <button class="mdp-admin-btn" id="recMoveBtn" onclick="toggleRecMoveMode()"
           style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.5);color:#b91c1c;">⭐ 즐겨찾기로 이동</button>
         <button class="mdp-admin-btn green" id="recAddToggleBtn" onclick="toggleRestForm('rec',true)">➕ 추가</button>
+        <button onclick="closeRecModal()" style="background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1;padding:0 2px;">✕</button>
       </div>
     </div>
     <div id="recMoveModeHint" style="display:none;font-size:11px;color:#b91c1c;font-weight:700;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:6px 10px;margin-bottom:6px;">
