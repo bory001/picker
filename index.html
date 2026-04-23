@@ -1163,9 +1163,12 @@
   <header>
     <!-- 1행: 제목 + 기능 버튼 -->
     <div class="header-row1">
-      <div class="header-left">
-        <h1 style="display:flex;align-items:center;gap:6px;"><img src="logo.png" alt="로고" style="height:22px;width:auto;object-fit:contain;vertical-align:middle;"> BR 식사조사</h1>
-        <div class="subtitle" id="headerSubtitle">(보령시청)</div>
+      <div class="header-left" style="display:flex;align-items:center;gap:8px;">
+        <img src="logo.png" alt="로고" style="height:34px;width:auto;object-fit:contain;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;justify-content:center;min-width:0;">
+          <h1 style="font-size:15px;font-weight:700;white-space:nowrap;">BR 식사조사</h1>
+          <div class="subtitle" id="headerSubtitle">(보령시청)</div>
+        </div>
       </div>
       <div class="header-right">
         <button class="hdr-btn hdr-attend-btn" id="hdrTimeBtn" onclick="openTimeModal()" style="display:none;">⏰ 시각등록</button>
