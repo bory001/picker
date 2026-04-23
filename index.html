@@ -1163,7 +1163,6 @@
       <div class="header-left">
         <h1>🍽️ BR 식사조사</h1>
         <div class="subtitle" id="headerSubtitle">(보령시청)</div>
-        <div class="header-balance" id="headerBalance" style="display:none;"></div>
       </div>
       <div class="header-right">
         <button class="hdr-btn hdr-attend-btn" id="hdrTimeBtn" onclick="openTimeModal()" style="display:none;">⏰ 시각등록</button>
@@ -1181,6 +1180,9 @@
       <button class="hdr-btn" onclick="openSharedFavModal()" style="background:rgba(255,140,0,0.2);border-color:rgba(255,140,0,0.7);color:white;">🌐 맛집(전체공유)</button>
       <button class="hdr-btn" onclick="openFavModal()" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.6);">⭐ 즐겨찾기</button>
       <button class="hdr-btn" onclick="openRecModal()" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.7);">🍴 식당추천</button>
+    </div>
+    <!-- 3행: 잔액 -->
+    <div id="headerBalance" style="display:none;padding:2px 0 1px 2px;">
     </div>
   </header>
 
@@ -1489,9 +1491,15 @@
       </div>
     </div>
     <div class="rest-list" id="sharedFavList"><div class="rest-empty">등록된 항목이 없어요</div></div>
-    <div id="sharedCopyExecRow" style="display:none;gap:6px;margin-bottom:6px;">
-      <button onclick="execSharedCopyToFav()" style="flex:1;padding:8px 10px;background:#ef4444;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">⭐ 선택항목 즐겨찾기로 복사</button>
-      <button onclick="cancelSharedCopyMode()" style="padding:8px 16px;background:white;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#64748b;">취소</button>
+    <div id="sharedCopyExecRow" style="display:none;flex-direction:column;gap:5px;margin-bottom:6px;">
+      <div style="display:flex;gap:5px;">
+        <button onclick="selectAllSharedCopy()" style="flex:1;padding:6px 8px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">✅ 전체선택</button>
+        <button onclick="deselectAllSharedCopy()" style="flex:1;padding:6px 8px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">⬜ 전체해제</button>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button onclick="execSharedCopyToFav()" style="flex:1;padding:8px 10px;background:#ef4444;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;" id="sharedCopyExecBtn">⭐ 선택항목 즐겨찾기로 복사</button>
+        <button onclick="cancelSharedCopyMode()" style="padding:8px 16px;background:white;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#64748b;">취소</button>
+      </div>
     </div>
     <button class="mdb-close-btn" onclick="closeSharedFavModal()" style="margin-top:0.6rem;">닫기</button>
   </div>
@@ -1542,9 +1550,15 @@
         <button class="rest-cancel-btn" onclick="toggleRestForm('fav',false)">취소</button>
       </div>
     </div>
-    <div id="favCopyExecRow" style="display:none;gap:6px;margin-bottom:6px;">
-      <button onclick="execFavCopyToShared()" style="flex:1;padding:8px 10px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">🌐 선택항목 맛집공유로 복사</button>
-      <button onclick="cancelFavCopyMode()" style="padding:8px 16px;background:white;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#64748b;">취소</button>
+    <div id="favCopyExecRow" style="display:none;flex-direction:column;gap:5px;margin-bottom:6px;">
+      <div style="display:flex;gap:5px;">
+        <button onclick="selectAllFavCopy()" style="flex:1;padding:6px 8px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">✅ 전체선택</button>
+        <button onclick="deselectAllFavCopy()" style="flex:1;padding:6px 8px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">⬜ 전체해제</button>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button onclick="execFavCopyToShared()" style="flex:1;padding:8px 10px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;" id="favCopyExecBtn">🌐 선택항목 맛집공유로 복사</button>
+        <button onclick="cancelFavCopyMode()" style="padding:8px 16px;background:white;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#64748b;">취소</button>
+      </div>
     </div>
     <div class="rest-list" id="favList"><div class="rest-empty">등록된 항목이 없어요</div></div>
     <button class="mdb-close-btn" onclick="closeFavModal()" style="margin-top:0.6rem;">닫기</button>
@@ -3348,7 +3362,6 @@
   window.toggleFavCopySelect = function(id) {
     if (_favCopySelected.has(id)) _favCopySelected.delete(id);
     else _favCopySelected.add(id);
-    // 선택 상태 시각 갱신
     const wrap = document.getElementById(`favWrap_${id}`);
     if (wrap) {
       if (_favCopySelected.has(id)) wrap.classList.add('fav-selected');
@@ -3356,12 +3369,28 @@
       const chk = wrap.querySelector('.fav-select-check');
       if (chk) chk.textContent = _favCopySelected.has(id) ? '✓' : '';
     }
-    // 버튼 텍스트 업데이트
-    const execRow = document.getElementById('favCopyExecRow');
-    if (execRow) {
-      const btn = execRow.querySelector('button');
-      if (btn) btn.textContent = `🌐 선택항목 맛집공유로 복사 (${_favCopySelected.size}개)`;
-    }
+    const btn = document.getElementById('favCopyExecBtn');
+    if (btn) btn.textContent = `🌐 선택항목 맛집공유로 복사 (${_favCopySelected.size}개)`;
+  };
+
+  window.selectAllFavCopy = function() {
+    Object.keys(favData).forEach(id => {
+      _favCopySelected.add(id);
+      const wrap = document.getElementById(`favWrap_${id}`);
+      if (wrap) { wrap.classList.add('fav-selected'); const chk = wrap.querySelector('.fav-select-check'); if(chk) chk.textContent='✓'; }
+    });
+    const btn = document.getElementById('favCopyExecBtn');
+    if (btn) btn.textContent = `🌐 선택항목 맛집공유로 복사 (${_favCopySelected.size}개)`;
+  };
+
+  window.deselectAllFavCopy = function() {
+    _favCopySelected.clear();
+    document.querySelectorAll('[id^="favWrap_"]').forEach(wrap => {
+      wrap.classList.remove('fav-selected');
+      const chk = wrap.querySelector('.fav-select-check'); if(chk) chk.textContent='';
+    });
+    const btn = document.getElementById('favCopyExecBtn');
+    if (btn) btn.textContent = `🌐 선택항목 맛집공유로 복사`;
   };
 
   window.execFavCopyToShared = async function() {
@@ -3415,11 +3444,28 @@
       const chk = wrap.querySelector('.fav-select-check');
       if (chk) chk.textContent = _sharedCopySelected.has(id) ? '✓' : '';
     }
-    const execRow = document.getElementById('sharedCopyExecRow');
-    if (execRow) {
-      const btn = execRow.querySelector('button');
-      if (btn) btn.textContent = `⭐ 선택항목 즐겨찾기로 복사 (${_sharedCopySelected.size}개)`;
-    }
+    const btn = document.getElementById('sharedCopyExecBtn');
+    if (btn) btn.textContent = `⭐ 선택항목 즐겨찾기로 복사 (${_sharedCopySelected.size}개)`;
+  };
+
+  window.selectAllSharedCopy = function() {
+    Object.keys(sharedFavData).forEach(id => {
+      _sharedCopySelected.add(id);
+      const wrap = document.getElementById(`sharedWrap_${id}`);
+      if (wrap) { wrap.classList.add('fav-selected'); const chk = wrap.querySelector('.fav-select-check'); if(chk) chk.textContent='✓'; }
+    });
+    const btn = document.getElementById('sharedCopyExecBtn');
+    if (btn) btn.textContent = `⭐ 선택항목 즐겨찾기로 복사 (${_sharedCopySelected.size}개)`;
+  };
+
+  window.deselectAllSharedCopy = function() {
+    _sharedCopySelected.clear();
+    document.querySelectorAll('[id^="sharedWrap_"]').forEach(wrap => {
+      wrap.classList.remove('fav-selected');
+      const chk = wrap.querySelector('.fav-select-check'); if(chk) chk.textContent='';
+    });
+    const btn = document.getElementById('sharedCopyExecBtn');
+    if (btn) btn.textContent = `⭐ 선택항목 즐겨찾기로 복사`;
   };
 
   window.execSharedCopyToFav = async function() {
